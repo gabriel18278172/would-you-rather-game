@@ -1,22 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Would You Rather — 10,000 questions, play solo or with friends in real-time across devices!" />
-  <title>Would You Rather?</title>
+  <meta name="description" content="Would You Rather v2 — 10,000 questions, solo, timed, multiplayer, achievements!" />
+  <title>Would You Rather? v2</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <canvas id="confetti-canvas"></canvas>
   <div id="app">
 
     <!-- ===== HEADER ===== -->
     <header>
-      <div class="logo">
-        <span class="logo-icon">🤔</span>
-        <span class="logo-title">Would You Rather?</span>
+      <div class="header-inner">
+        <div class="logo">
+          <span class="logo-icon">🤔</span>
+          <span class="logo-title">Would You Rather?</span>
+        </div>
+        <div class="header-actions">
+          <button id="btn-theme-toggle" class="icon-btn" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
+          <button id="btn-settings" class="icon-btn" title="Settings" aria-label="Settings">⚙️</button>
+        </div>
       </div>
-      <p class="logo-subtitle">10,000 questions · Solo or Multiplayer</p>
+      <p class="logo-subtitle">v2.0 · 10,000 questions · Solo · Timed · Multiplayer</p>
     </header>
 
     <!-- ===== HOME SCREEN ===== -->
@@ -24,28 +31,104 @@
       <div class="card">
         <div class="home-hero">
           <h1>Play <span class="highlight">Would You Rather</span> with friends!</h1>
-          <p>Answer fun questions solo or challenge your friends in real-time across any device.</p>
+          <p>Answer fun questions solo, race against the clock, or challenge friends in real-time.</p>
         </div>
       </div>
-
       <div class="mode-buttons">
         <button id="btn-solo" class="btn btn-primary btn-lg">
           <span class="btn-icon">🎲</span> Play Solo
         </button>
+        <button id="btn-timed" class="btn btn-timed btn-lg">
+          <span class="btn-icon">⏱️</span> Timed Mode
+        </button>
         <button id="btn-multiplayer" class="btn btn-secondary btn-lg">
           <span class="btn-icon">👥</span> Play with Friends
+        </button>
+        <div class="home-secondary-btns">
+          <button id="btn-stats" class="btn btn-ghost btn-home-sec">
+            <span class="btn-icon">🏆</span> Stats
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CATEGORY PICKER ===== -->
+    <div id="screen-category-picker" class="screen">
+      <button id="btn-category-back" class="back-btn">← Back</button>
+      <div class="card">
+        <h2 class="screen-title">📂 Choose Categories</h2>
+        <p class="screen-subtitle">Select which categories to include in your game.</p>
+        <div class="category-actions">
+          <button id="btn-cat-all" class="btn btn-sm btn-secondary">Select All</button>
+          <button id="btn-cat-none" class="btn btn-sm btn-ghost">Clear All</button>
+        </div>
+        <div id="category-checkboxes" class="category-grid"></div>
+      </div>
+      <div class="mode-buttons" style="margin-top:0">
+        <button id="btn-category-start" class="btn btn-primary btn-lg">
+          🎮 Start Game →
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== TIMED MODE SETUP ===== -->
+    <div id="screen-timed-setup" class="screen">
+      <button id="btn-timed-back" class="back-btn">← Back</button>
+      <div class="card">
+        <h2 class="screen-title">⏱️ Timed Mode</h2>
+        <p class="screen-subtitle">Race against the clock! Choose your time limit per question.</p>
+        <div class="timer-options">
+          <label class="timer-option">
+            <input type="radio" name="timer-duration" value="5" />
+            <span class="timer-option-label"><span class="timer-option-num">5s</span><span class="timer-option-desc">Lightning</span></span>
+          </label>
+          <label class="timer-option">
+            <input type="radio" name="timer-duration" value="10" checked />
+            <span class="timer-option-label"><span class="timer-option-num">10s</span><span class="timer-option-desc">Fast</span></span>
+          </label>
+          <label class="timer-option">
+            <input type="radio" name="timer-duration" value="15" />
+            <span class="timer-option-label"><span class="timer-option-num">15s</span><span class="timer-option-desc">Normal</span></span>
+          </label>
+          <label class="timer-option">
+            <input type="radio" name="timer-duration" value="30" />
+            <span class="timer-option-label"><span class="timer-option-num">30s</span><span class="timer-option-desc">Relaxed</span></span>
+          </label>
+        </div>
+      </div>
+      <div class="mode-buttons" style="margin-top:0">
+        <button id="btn-timed-start" class="btn btn-timed btn-lg">
+          ⏱️ Start Timed Game →
         </button>
       </div>
     </div>
 
     <!-- ===== SOLO GAME ===== -->
     <div id="screen-solo-game" class="screen">
-      <div class="card">
+      <div class="solo-game-header">
         <p id="solo-q-num" class="question-number">Question 1</p>
+        <div class="solo-header-right">
+          <button id="btn-history" class="icon-btn" title="View history">📜</button>
+        </div>
+      </div>
+
+      <div class="card solo-card">
+        <!-- Category badge -->
+        <div id="solo-category-badge" class="category-badge"></div>
+
+        <!-- Circular countdown timer (timed mode only) -->
+        <div id="timer-container" class="timer-container" style="display:none">
+          <svg class="timer-svg" viewBox="0 0 60 60">
+            <circle class="timer-bg-circle" cx="30" cy="30" r="26" />
+            <circle id="timer-progress-circle" class="timer-progress-circle" cx="30" cy="30" r="26" />
+          </svg>
+          <span id="timer-text" class="timer-text">10</span>
+        </div>
+
         <p class="question-label">Would you rather…</p>
 
         <div class="options">
-          <button id="solo-opt-a" class="option-btn option-a">
+          <button id="solo-opt-a" class="option-btn option-a ripple">
             <div class="option-label">
               <span class="option-letter">A</span>
               <span id="solo-opt-a-text" class="option-text">Option A</span>
@@ -54,7 +137,7 @@
 
           <div class="vs-divider"><span class="vs-badge">OR</span></div>
 
-          <button id="solo-opt-b" class="option-btn option-b">
+          <button id="solo-opt-b" class="option-btn option-b ripple">
             <div class="option-label">
               <span class="option-letter">B</span>
               <span id="solo-opt-b-text" class="option-text">Option B</span>
@@ -67,7 +150,7 @@
           <div class="result-row">
             <div class="result-header">
               <span class="result-label">
-                <span class="option-letter option-a" style="width:22px;height:22px;font-size:0.7rem;background:#fed7aa;color:#f97316;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;">A</span>
+                <span class="result-opt-letter opt-a-letter">A</span>
                 Option A
               </span>
               <span id="solo-pct-a" class="result-pct">0%</span>
@@ -77,11 +160,10 @@
             </div>
             <span id="solo-votes-a" class="result-votes">0 votes</span>
           </div>
-
           <div class="result-row">
             <div class="result-header">
               <span class="result-label">
-                <span class="option-letter option-b" style="width:22px;height:22px;font-size:0.7rem;background:#a5f3fc;color:#06b6d4;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;">B</span>
+                <span class="result-opt-letter opt-b-letter">B</span>
                 Option B
               </span>
               <span id="solo-pct-b" class="result-pct">0%</span>
@@ -91,7 +173,6 @@
             </div>
             <span id="solo-votes-b" class="result-votes">0 votes</span>
           </div>
-
           <p id="solo-total" class="result-total">0 total responses</p>
         </div>
       </div>
@@ -99,6 +180,9 @@
       <div class="game-actions">
         <button id="solo-next-btn" class="btn btn-primary" style="display:none">
           Next Question →
+        </button>
+        <button id="solo-share-btn" class="btn btn-secondary" style="display:none">
+          📱 Share
         </button>
         <button id="solo-home-btn" class="btn btn-ghost">
           ← Home
@@ -132,38 +216,16 @@
         <div class="mp-setup">
           <h2>🔗 Join a Room</h2>
           <p>Enter the room code shared by your friend.</p>
-
           <div class="input-group">
             <label for="join-code-input">Room Code</label>
-            <input
-              id="join-code-input"
-              class="input-field code-input"
-              type="text"
-              maxlength="6"
-              placeholder="ABCDE"
-              autocomplete="off"
-              autocorrect="off"
-              spellcheck="false"
-            />
+            <input id="join-code-input" class="input-field code-input" type="text" maxlength="6" placeholder="ABCDE" autocomplete="off" autocorrect="off" spellcheck="false" />
           </div>
-
           <div class="input-group">
             <label for="join-name-input">Your Name</label>
-            <input
-              id="join-name-input"
-              class="input-field"
-              type="text"
-              maxlength="20"
-              placeholder="Enter your name"
-              autocomplete="off"
-            />
+            <input id="join-name-input" class="input-field" type="text" maxlength="20" placeholder="Enter your name" autocomplete="off" />
           </div>
-
           <div id="join-status" class="status-msg info" style="display:none"></div>
-
-          <button id="btn-join-submit" class="btn btn-primary btn-lg">
-            Join Game →
-          </button>
+          <button id="btn-join-submit" class="btn btn-primary btn-lg">Join Game →</button>
         </div>
       </div>
     </div>
@@ -171,31 +233,22 @@
     <!-- ===== HOST LOBBY ===== -->
     <div id="screen-mp-host-lobby" class="screen">
       <button id="btn-host-back" class="back-btn">← Leave Room</button>
-
       <div class="card">
         <div class="mp-setup">
           <h2>🏠 Your Room</h2>
           <p>Share this code with your friends so they can join:</p>
-
           <div class="room-code-display">
             <p class="room-code-label">Room Code</p>
             <p id="host-room-code" class="room-code-value">-----</p>
             <p class="room-code-hint">Tap to copy the code and send it to friends</p>
-            <button id="host-room-code-copy" class="btn btn-secondary btn-sm" style="margin-top:12px">
-              📋 Copy Code
-            </button>
+            <button id="host-room-code-copy" class="btn btn-secondary btn-sm" style="margin-top:12px">📋 Copy Code</button>
           </div>
-
           <div id="host-status" class="status-msg info">Connecting…</div>
-
           <div>
             <p style="font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">Players in Room:</p>
             <div id="host-player-list" class="player-list"></div>
           </div>
-
-          <button id="btn-host-start" class="btn btn-primary btn-lg">
-            🎮 Start Game
-          </button>
+          <button id="btn-host-start" class="btn btn-primary btn-lg">🎮 Start Game</button>
         </div>
       </div>
     </div>
@@ -207,13 +260,11 @@
         <div class="mp-setup waiting-room">
           <h3>🎮 Waiting for host to start…</h3>
           <p>You're connected! The game will begin once the host starts it.</p>
-
           <div class="waiting-animation">
             <div class="waiting-dot"></div>
             <div class="waiting-dot"></div>
             <div class="waiting-dot"></div>
           </div>
-
           <div>
             <p style="font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">Players in Room:</p>
             <div id="client-player-list" class="player-list"></div>
@@ -233,89 +284,206 @@
           <span id="player-badge-count">2 players</span>
         </div>
       </div>
-
       <div class="card">
         <p class="question-label">Would you rather…</p>
-
         <div class="options">
-          <button id="mp-opt-a" class="option-btn option-a">
+          <button id="mp-opt-a" class="option-btn option-a ripple">
             <div class="option-label">
               <span class="option-letter">A</span>
               <span id="mp-opt-a-text" class="option-text">Option A</span>
             </div>
           </button>
-
           <div class="vs-divider"><span class="vs-badge">OR</span></div>
-
-          <button id="mp-opt-b" class="option-btn option-b">
+          <button id="mp-opt-b" class="option-btn option-b ripple">
             <div class="option-label">
               <span class="option-letter">B</span>
               <span id="mp-opt-b-text" class="option-text">Option B</span>
             </div>
           </button>
         </div>
-
-        <!-- Vote status -->
         <div class="vote-status">
           <div id="mp-vote-icons" class="vote-icons"></div>
           <span id="mp-vote-count">0/0 voted</span>
         </div>
-
-        <!-- Results -->
         <div id="mp-results" class="results-container">
           <div class="result-row">
             <div class="result-header">
               <span class="result-label">
-                <span style="width:22px;height:22px;font-size:0.7rem;background:#fed7aa;color:#f97316;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;">A</span>
+                <span class="result-opt-letter opt-a-letter">A</span>
                 Option A
               </span>
               <span id="mp-pct-a" class="result-pct">0%</span>
             </div>
-            <div class="result-bar-bg">
-              <div id="mp-bar-a" class="result-bar bar-a"></div>
-            </div>
+            <div class="result-bar-bg"><div id="mp-bar-a" class="result-bar bar-a"></div></div>
             <span id="mp-votes-a" class="result-votes">0 votes</span>
           </div>
-
           <div class="result-row">
             <div class="result-header">
               <span class="result-label">
-                <span style="width:22px;height:22px;font-size:0.7rem;background:#a5f3fc;color:#06b6d4;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;">B</span>
+                <span class="result-opt-letter opt-b-letter">B</span>
                 Option B
               </span>
               <span id="mp-pct-b" class="result-pct">0%</span>
             </div>
-            <div class="result-bar-bg">
-              <div id="mp-bar-b" class="result-bar bar-b"></div>
-            </div>
+            <div class="result-bar-bg"><div id="mp-bar-b" class="result-bar bar-b"></div></div>
             <span id="mp-votes-b" class="result-votes">0 votes</span>
           </div>
-
           <p id="mp-total" class="result-total">0 total responses</p>
         </div>
       </div>
-
       <div class="game-actions">
-        <button id="mp-next-btn" class="btn btn-primary" style="display:none">
-          Next Question →
-        </button>
-        <button id="mp-home-btn" class="btn btn-ghost">
-          ← Home
-        </button>
+        <button id="mp-next-btn" class="btn btn-primary" style="display:none">Next Question →</button>
+        <button id="mp-home-btn" class="btn btn-ghost">← Home</button>
+      </div>
+    </div>
+
+    <!-- ===== STATS SCREEN ===== -->
+    <div id="screen-stats" class="screen">
+      <button id="btn-stats-back" class="back-btn">← Back</button>
+      <div class="card">
+        <h2 class="screen-title">🏆 Your Stats</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-label">Questions Answered</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-fastest">--</div>
+            <div class="stat-label">Fastest Answer</div>
+          </div>
+        </div>
+        <div class="ab-split">
+          <h3 class="section-title">A vs B Split</h3>
+          <div class="ab-bar-container">
+            <div class="ab-bar-label">A <span id="stat-a-pct">50%</span></div>
+            <div class="ab-bar-bg">
+              <div id="ab-bar-a" class="ab-bar-fill bar-a" style="width:50%"></div>
+              <div id="ab-bar-b" class="ab-bar-fill bar-b" style="width:50%"></div>
+            </div>
+            <div class="ab-bar-label">B <span id="stat-b-pct">50%</span></div>
+          </div>
+          <div class="ab-counts">
+            <span id="stat-a-count">0 times A</span>
+            <span id="stat-b-count">0 times B</span>
+          </div>
+        </div>
+        <div class="fav-time">
+          <h3 class="section-title">Favorite Time to Play</h3>
+          <p id="stat-fav-time" class="fav-time-value">--</p>
+        </div>
+        <div class="share-stats-row">
+          <button id="btn-share-stats" class="btn btn-secondary btn-sm">📱 Share Stats</button>
+        </div>
+      </div>
+
+      <!-- Achievements -->
+      <div class="card">
+        <h2 class="screen-title">🏅 Achievements</h2>
+        <div id="achievements-grid" class="achievements-grid"></div>
+      </div>
+    </div>
+
+    <!-- ===== SETTINGS SCREEN ===== -->
+    <div id="screen-settings" class="screen">
+      <button id="btn-settings-back" class="back-btn">← Back</button>
+      <div class="card">
+        <h2 class="screen-title">⚙️ Settings</h2>
+
+        <div class="settings-list">
+          <div class="settings-item">
+            <div class="settings-item-info">
+              <span class="settings-item-title">🌙 Dark Mode</span>
+              <span class="settings-item-desc">Switch to dark theme</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="setting-dark-mode" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="settings-item">
+            <div class="settings-item-info">
+              <span class="settings-item-title">🔊 Sound Effects</span>
+              <span class="settings-item-desc">Play sounds during the game</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="setting-sounds" checked />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="settings-item settings-item-themes">
+            <div class="settings-item-info">
+              <span class="settings-item-title">🎨 Theme Color</span>
+              <span class="settings-item-desc">Choose your accent color</span>
+            </div>
+            <div class="theme-swatches" id="theme-swatches">
+              <button class="swatch swatch-default active" data-theme-name="default" title="Default (Purple)"></button>
+              <button class="swatch swatch-ocean" data-theme-name="ocean" title="Ocean (Blue)"></button>
+              <button class="swatch swatch-sunset" data-theme-name="sunset" title="Sunset (Orange)"></button>
+              <button class="swatch swatch-forest" data-theme-name="forest" title="Forest (Green)"></button>
+              <button class="swatch swatch-candy" data-theme-name="candy" title="Candy (Pink)"></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-danger-zone">
+          <button id="btn-reset-stats" class="btn btn-sm btn-danger">🗑️ Reset All Stats</button>
+        </div>
+
+        <div class="settings-about">
+          <p>Would You Rather? <strong>v2.0</strong></p>
+          <p>10,000 questions · Solo · Timed · Multiplayer</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SESSION SUMMARY ===== -->
+    <div id="screen-session-summary" class="screen">
+      <div class="card">
+        <h2 class="screen-title">📊 Session Summary</h2>
+        <div class="summary-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="summary-answered">0</div>
+            <div class="stat-label">Questions Answered</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="summary-time">0s</div>
+            <div class="stat-label">Time Played</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="summary-split">50/50</div>
+            <div class="stat-label">A/B Split</div>
+          </div>
+        </div>
+      </div>
+      <div class="mode-buttons" style="margin-top:0">
+        <button id="btn-play-again" class="btn btn-primary btn-lg">🎲 Play Again</button>
+        <button id="btn-summary-home" class="btn btn-ghost btn-lg">← Home</button>
       </div>
     </div>
 
   </div><!-- /app -->
 
+  <!-- History Panel (slide-in overlay) -->
+  <div id="history-panel" class="history-panel">
+    <div class="history-panel-header">
+      <h3>📜 Question History</h3>
+      <button id="btn-history-close" class="icon-btn">✕</button>
+    </div>
+    <div id="history-list" class="history-list"></div>
+  </div>
+  <div id="history-overlay" class="history-overlay"></div>
+
   <!-- Toast notification -->
   <div id="toast"></div>
+  <!-- Achievement toast -->
+  <div id="achievement-toast" class="achievement-toast"></div>
 
   <!-- PeerJS from CDN (WebRTC multiplayer) -->
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-
   <!-- Questions bank (10,000 questions) -->
   <script src="questions.js"></script>
-
   <!-- Game logic -->
   <script src="script.js"></script>
 </body>
