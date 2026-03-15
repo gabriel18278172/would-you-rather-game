@@ -280,6 +280,7 @@ const state = {
   mode: 'solo',
   questions: [],
   currentIndex: 0,
+  currentQuestionIndex: 0, // actual index in the questions[] array (used as API key)
   voted: false,
   votesA: 0,
   votesB: 0,
@@ -415,6 +416,7 @@ function nextUnusedQuestion() {
   }
   const idx = state.questions[state.currentIndex];
   usedIndices.add(idx);
+  state.currentQuestionIndex = idx; // track actual index for API
   state.currentIndex = (state.currentIndex + 1) % state.questions.length;
   return questions[idx];
 }
@@ -489,6 +491,39 @@ function getSelectedCategories() {
   return sel;
 }
 
+// ===== VOTE API HELPERS =====
+
+const API_BASE = ''; // Empty string = same origin (works when served by server.js)
+
+async function submitVote(questionIndex, choice) {
+  try {
+    const res = await fetch(`${API_BASE}/api/vote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ questionIndex, choice })
+    });
+    if (!res.ok) throw new Error(`Vote failed with status ${res.status}`);
+    return await res.json();
+  } catch (e) {
+    console.warn('Vote API unavailable, using fallback');
+    return null;
+  }
+}
+
+async function getVotes(questionIndex) {
+  try {
+    const res = await fetch(`${API_BASE}/api/votes/${questionIndex}`);
+    if (!res.ok) throw new Error(`Fetch failed with status ${res.status}`);
+    return await res.json();
+  } catch (e) {
+    return null;
+  }
+}
+
+function formatNumber(n) {
+  return n.toLocaleString();
+}
+
 // ===== SOLO MODE =====
 
 function showCategoryPicker(mode) {
@@ -557,45 +592,10 @@ function soloVote(choice) {
 
   const elapsed = sessionAnswerStart ? (Date.now() - sessionAnswerStart) / 1000 : null;
 
-  // Simulate crowd — majority matches player's choice
-  const majorityPct = Math.floor(Math.random() * 40) + 51;
-  const minorityPct = 100 - majorityPct;
-  if (choice === 'A') {
-    state.votesA = majorityPct;
-    state.votesB = minorityPct;
-  } else {
-    state.votesA = minorityPct;
-    state.votesB = majorityPct;
-  }
-
-  const total = state.votesA + state.votesB;
-  const pctA = Math.round((state.votesA / total) * 100);
-  const pctB = 100 - pctA;
-
-  lastAnsweredQuestion = state.currentQuestion;
-  lastChoice = choice;
-  lastPctA = pctA;
-  lastPctB = pctB;
-
   $('solo-opt-a').classList.toggle('selected', choice === 'A');
   $('solo-opt-b').classList.toggle('selected', choice === 'B');
   $('solo-opt-a').disabled = true;
   $('solo-opt-b').disabled = true;
-
-  $('solo-pct-a').textContent = pctA + '%';
-  $('solo-pct-b').textContent = pctB + '%';
-  $('solo-votes-a').textContent = `${state.votesA} vote${state.votesA !== 1 ? 's' : ''}`;
-  $('solo-votes-b').textContent = `${state.votesB} vote${state.votesB !== 1 ? 's' : ''}`;
-  $('solo-total').textContent = `${total} total responses`;
-
-  $('solo-results').classList.add('visible');
-  setTimeout(() => {
-    $('solo-bar-a').style.width = pctA + '%';
-    $('solo-bar-b').style.width = pctB + '%';
-  }, 60);
-
-  $('solo-next-btn').style.display = '';
-  $('solo-share-btn').style.display = '';
 
   // Session tracking
   sessionAnswered++;
@@ -606,8 +606,60 @@ function soloVote(choice) {
 
   playSound('ding');
 
-  // History
-  addToHistory(state.currentQuestion, choice, pctA, pctB);
+  // Attempt to submit the real vote to the API, fall back to simulated crowd
+  submitVote(state.currentQuestionIndex, choice).then(data => {
+    let pctA, pctB, votesA, votesB;
+
+    if (data && typeof data.a === 'number' && typeof data.b === 'number') {
+      // Real votes from server
+      const total = data.a + data.b;
+      if (total > 0) {
+        pctA = Math.round((data.a / total) * 100);
+        pctB = 100 - pctA;
+      } else {
+        pctA = choice === 'A' ? 100 : 0;
+        pctB = 100 - pctA;
+      }
+      votesA = data.a;
+      votesB = data.b;
+    } else {
+      // Fallback: simulate crowd — majority matches player's choice
+      const majorityPct = Math.floor(Math.random() * 40) + 51;
+      const minorityPct = 100 - majorityPct;
+      pctA = choice === 'A' ? majorityPct : minorityPct;
+      pctB = 100 - pctA;
+      votesA = pctA;
+      votesB = pctB;
+    }
+
+    state.votesA = votesA;
+    state.votesB = votesB;
+
+    lastAnsweredQuestion = state.currentQuestion;
+    lastChoice = choice;
+    lastPctA = pctA;
+    lastPctB = pctB;
+
+    $('solo-pct-a').textContent = pctA + '%';
+    $('solo-pct-b').textContent = pctB + '%';
+    $('solo-votes-a').textContent = `${formatNumber(votesA)} vote${votesA !== 1 ? 's' : ''}`;
+    $('solo-votes-b').textContent = `${formatNumber(votesB)} vote${votesB !== 1 ? 's' : ''}`;
+
+    const total = votesA + votesB;
+    $('solo-total').textContent = `${formatNumber(total)} total responses`;
+
+    $('solo-results').classList.add('visible');
+    setTimeout(() => {
+      $('solo-bar-a').style.width = pctA + '%';
+      $('solo-bar-b').style.width = pctB + '%';
+    }, 60);
+
+    $('solo-next-btn').style.display = '';
+    $('solo-share-btn').style.display = '';
+
+    // History
+    addToHistory(state.currentQuestion, choice, pctA, pctB);
+  });
 }
 
 // ===== SESSION SUMMARY =====
