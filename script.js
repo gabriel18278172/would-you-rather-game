@@ -1150,16 +1150,31 @@ function showToast(msg, duration = 2800) {
   toastTimer = setTimeout(() => t.classList.remove('show'), duration);
 }
 
-function escapeHtml(str) {
-  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
 function setStatus(id, msg, type = 'info') {
   const el = $(id);
   if (!el) return;
-  el.innerHTML = msg;
+  el.textContent = msg;
   el.className = `status-msg ${type}`;
   el.style.display = msg ? '' : 'none';
+}
+
+function setStatusWithRetry(id, msg, type, retryFn) {
+  const el = $(id);
+  if (!el) return;
+  el.textContent = '';
+  el.className = `status-msg ${type}`;
+  el.style.display = msg ? '' : 'none';
+  const span = document.createElement('span');
+  span.textContent = msg;
+  el.appendChild(span);
+  if (retryFn) {
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-sm btn-secondary';
+    btn.style.marginLeft = '8px';
+    btn.textContent = 'Retry';
+    btn.addEventListener('click', retryFn);
+    el.appendChild(btn);
+  }
 }
 
 function updatePlayerBadge() {
@@ -1655,7 +1670,7 @@ function initHost(retryCount) {
 
   const Peer = getPeerJS();
   if (!Peer) {
-    setStatus('host-status', 'Connection service failed to load. <button class="btn btn-sm btn-secondary" onclick="initHost()">Tap to retry</button>', 'error');
+    setStatusWithRetry('host-status', 'Connection service failed to load.', 'error', () => initHost(0));
     return;
   }
 
@@ -1705,10 +1720,10 @@ function initHost(retryCount) {
         $('host-room-code').textContent = state.roomCode;
         initHost(retryCount + 1);
       } else {
-        setStatus('host-status', 'Could not create room after multiple attempts. <button class="btn btn-sm btn-secondary" onclick="initHost(0)">Try Again</button>', 'error');
+        setStatusWithRetry('host-status', 'Could not create room after multiple attempts.', 'error', () => initHost(0));
       }
     } else {
-      setStatus('host-status', 'Connection error: ' + escapeHtml(err.message) + ' <button class="btn btn-sm btn-secondary" onclick="initHost(0)">Try Again</button>', 'error');
+      setStatusWithRetry('host-status', 'Connection error: ' + err.message, 'error', () => initHost(0));
     }
   });
 
@@ -1725,7 +1740,7 @@ function initClient(code, name) {
 
   const Peer = getPeerJS();
   if (!Peer) {
-    setStatus('join-status', 'Connection service failed to load. <button class="btn btn-sm btn-secondary" onclick="submitJoin()">Tap to retry</button>', 'error');
+    setStatusWithRetry('join-status', 'Connection service failed to load.', 'error', submitJoin);
     return;
   }
 
@@ -1739,7 +1754,7 @@ function initClient(code, name) {
 
   const connectTimeout = setTimeout(() => {
     if (!state.hostConn || !state.hostConn.open) {
-      setStatus('join-status', 'Connection timed out. Check the code and try again. <button class="btn btn-sm btn-secondary" onclick="submitJoin()">Retry</button>', 'error');
+      setStatusWithRetry('join-status', 'Connection timed out. Check the code and try again.', 'error', submitJoin);
       if (state.peer) { state.peer.destroy(); state.peer = null; }
     }
   }, 15000);
@@ -1767,16 +1782,16 @@ function initClient(code, name) {
 
     state.hostConn.on('error', () => {
       clearTimeout(connectTimeout);
-      setStatus('join-status', 'Could not connect. Check the code and try again. <button class="btn btn-sm btn-secondary" onclick="submitJoin()">Retry</button>', 'error');
+      setStatusWithRetry('join-status', 'Could not connect. Check the code and try again.', 'error', submitJoin);
     });
   });
 
   state.peer.on('error', err => {
     clearTimeout(connectTimeout);
     if (err.type === 'peer-unavailable') {
-      setStatus('join-status', 'Room not found. Double-check the code. <button class="btn btn-sm btn-secondary" onclick="submitJoin()">Retry</button>', 'error');
+      setStatusWithRetry('join-status', 'Room not found. Double-check the code.', 'error', submitJoin);
     } else {
-      setStatus('join-status', 'Error: ' + escapeHtml(err.message) + ' <button class="btn btn-sm btn-secondary" onclick="submitJoin()">Retry</button>', 'error');
+      setStatusWithRetry('join-status', 'Error: ' + err.message, 'error', submitJoin);
     }
   });
 }
