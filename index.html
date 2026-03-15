@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Would You Rather — 10,000 questions, play solo or with friends in real-time across devices!" />
+  <title>Would You Rather?</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ===== HEADER ===== -->
+    <header>
+      <div class="logo">
+        <span class="logo-icon">🤔</span>
+        <span class="logo-title">Would You Rather?</span>
+      </div>
+      <p class="logo-subtitle">10,000 questions · Solo or Multiplayer</p>
+    </header>
+
+    <!-- ===== HOME SCREEN ===== -->
+    <div id="screen-home" class="screen">
+      <div class="card">
+        <div class="home-hero">
+          <h1>Play <span class="highlight">Would You Rather</span> with friends!</h1>
+          <p>Answer fun questions solo or challenge your friends in real-time across any device.</p>
+        </div>
+      </div>
+
+      <div class="mode-buttons">
+        <button id="btn-solo" class="btn btn-primary btn-lg">
+          <span class="btn-icon">🎲</span> Play Solo
+        </button>
+        <button id="btn-multiplayer" class="btn btn-secondary btn-lg">
+          <span class="btn-icon">👥</span> Play with Friends
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== SOLO GAME ===== -->
+    <div id="screen-solo-game" class="screen">
+      <div class="card">
+        <p id="solo-q-num" class="question-number">Question 1</p>
+        <p class="question-label">Would you rather…</p>
+
+        <div class="options">
+          <button id="solo-opt-a" class="option-btn option-a">
+            <div class="option-label">
+              <span class="option-letter">A</span>
+              <span id="solo-opt-a-text" class="option-text">Option A</span>
+            </div>
+          </button>
+
+          <div class="vs-divider"><span class="vs-badge">OR</span></div>
+
+          <button id="solo-opt-b" class="option-btn option-b">
+            <div class="option-label">
+              <span class="option-letter">B</span>
+              <span id="solo-opt-b-text" class="option-text">Option B</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Results -->
+        <div id="solo-results" class="results-container">
+          <div class="result-row">
+            <div class="result-header">
+              <span class="result-label">
+                <span class="option-letter option-a" style="width:22px;height:22px;font-size:0.7rem;background:#fed7aa;color:#f97316;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;">A</span>
+                Option A
+              </span>
+              <span id="solo-pct-a" class="result-pct">0%</span>
+            </div>
+            <div class="result-bar-bg">
+              <div id="solo-bar-a" class="result-bar bar-a"></div>
+            </div>
+            <span id="solo-votes-a" class="result-votes">0 votes</span>
+          </div>
+
+          <div class="result-row">
+            <div class="result-header">
+              <span class="result-label">
+                <span class="option-letter option-b" style="width:22px;height:22px;font-size:0.7rem;background:#a5f3fc;color:#06b6d4;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;">B</span>
+                Option B
+              </span>
+              <span id="solo-pct-b" class="result-pct">0%</span>
+            </div>
+            <div class="result-bar-bg">
+              <div id="solo-bar-b" class="result-bar bar-b"></div>
+            </div>
+            <span id="solo-votes-b" class="result-votes">0 votes</span>
+          </div>
+
+          <p id="solo-total" class="result-total">0 total responses</p>
+        </div>
+      </div>
+
+      <div class="game-actions">
+        <button id="solo-next-btn" class="btn btn-primary" style="display:none">
+          Next Question →
+        </button>
+        <button id="solo-home-btn" class="btn btn-ghost">
+          ← Home
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== MULTIPLAYER SETUP ===== -->
+    <div id="screen-mp-setup" class="screen">
+      <button id="btn-mp-back" class="back-btn">← Back</button>
+      <div class="card">
+        <div class="mp-setup">
+          <h2>👥 Play with Friends</h2>
+          <p>Create a room and share the code with friends, or join an existing room — no account needed!</p>
+          <div class="mp-options">
+            <button id="btn-mp-create" class="btn btn-primary btn-lg">
+              <span class="btn-icon">🏠</span> Create Room
+            </button>
+            <button id="btn-mp-join" class="btn btn-secondary btn-lg">
+              <span class="btn-icon">🔗</span> Join Room
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== JOIN ROOM ===== -->
+    <div id="screen-mp-join" class="screen">
+      <button id="btn-join-back" class="back-btn">← Back</button>
+      <div class="card">
+        <div class="mp-setup">
+          <h2>🔗 Join a Room</h2>
+          <p>Enter the room code shared by your friend.</p>
+
+          <div class="input-group">
+            <label for="join-code-input">Room Code</label>
+            <input
+              id="join-code-input"
+              class="input-field code-input"
+              type="text"
+              maxlength="6"
+              placeholder="ABCDE"
+              autocomplete="off"
+              autocorrect="off"
+              spellcheck="false"
+            />
+          </div>
+
+          <div class="input-group">
+            <label for="join-name-input">Your Name</label>
+            <input
+              id="join-name-input"
+              class="input-field"
+              type="text"
+              maxlength="20"
+              placeholder="Enter your name"
+              autocomplete="off"
+            />
+          </div>
+
+          <div id="join-status" class="status-msg info" style="display:none"></div>
+
+          <button id="btn-join-submit" class="btn btn-primary btn-lg">
+            Join Game →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== HOST LOBBY ===== -->
+    <div id="screen-mp-host-lobby" class="screen">
+      <button id="btn-host-back" class="back-btn">← Leave Room</button>
+
+      <div class="card">
+        <div class="mp-setup">
+          <h2>🏠 Your Room</h2>
+          <p>Share this code with your friends so they can join:</p>
+
+          <div class="room-code-display">
+            <p class="room-code-label">Room Code</p>
+            <p id="host-room-code" class="room-code-value">-----</p>
+            <p class="room-code-hint">Tap to copy the code and send it to friends</p>
+            <button id="host-room-code-copy" class="btn btn-secondary btn-sm" style="margin-top:12px">
+              📋 Copy Code
+            </button>
+          </div>
+
+          <div id="host-status" class="status-msg info">Connecting…</div>
+
+          <div>
+            <p style="font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">Players in Room:</p>
+            <div id="host-player-list" class="player-list"></div>
+          </div>
+
+          <button id="btn-host-start" class="btn btn-primary btn-lg">
+            🎮 Start Game
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CLIENT LOBBY ===== -->
+    <div id="screen-mp-client-lobby" class="screen">
+      <button id="btn-client-back" class="back-btn">← Leave Room</button>
+      <div class="card">
+        <div class="mp-setup waiting-room">
+          <h3>🎮 Waiting for host to start…</h3>
+          <p>You're connected! The game will begin once the host starts it.</p>
+
+          <div class="waiting-animation">
+            <div class="waiting-dot"></div>
+            <div class="waiting-dot"></div>
+            <div class="waiting-dot"></div>
+          </div>
+
+          <div>
+            <p style="font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">Players in Room:</p>
+            <div id="client-player-list" class="player-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MULTIPLAYER GAME ===== -->
+    <div id="screen-mp-game" class="screen">
+      <div class="game-header">
+        <div class="game-header-left">
+          <span id="mp-q-num" class="question-number" style="margin:0">Question 1</span>
+        </div>
+        <div id="player-badge" class="player-badge">
+          <span class="player-dot"></span>
+          <span id="player-badge-count">2 players</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="question-label">Would you rather…</p>
+
+        <div class="options">
+          <button id="mp-opt-a" class="option-btn option-a">
+            <div class="option-label">
+              <span class="option-letter">A</span>
+              <span id="mp-opt-a-text" class="option-text">Option A</span>
+            </div>
+          </button>
+
+          <div class="vs-divider"><span class="vs-badge">OR</span></div>
+
+          <button id="mp-opt-b" class="option-btn option-b">
+            <div class="option-label">
+              <span class="option-letter">B</span>
+              <span id="mp-opt-b-text" class="option-text">Option B</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- Vote status -->
+        <div class="vote-status">
+          <div id="mp-vote-icons" class="vote-icons"></div>
+          <span id="mp-vote-count">0/0 voted</span>
+        </div>
+
+        <!-- Results -->
+        <div id="mp-results" class="results-container">
+          <div class="result-row">
+            <div class="result-header">
+              <span class="result-label">
+                <span style="width:22px;height:22px;font-size:0.7rem;background:#fed7aa;color:#f97316;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;">A</span>
+                Option A
+              </span>
+              <span id="mp-pct-a" class="result-pct">0%</span>
+            </div>
+            <div class="result-bar-bg">
+              <div id="mp-bar-a" class="result-bar bar-a"></div>
+            </div>
+            <span id="mp-votes-a" class="result-votes">0 votes</span>
+          </div>
+
+          <div class="result-row">
+            <div class="result-header">
+              <span class="result-label">
+                <span style="width:22px;height:22px;font-size:0.7rem;background:#a5f3fc;color:#06b6d4;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-weight:800;">B</span>
+                Option B
+              </span>
+              <span id="mp-pct-b" class="result-pct">0%</span>
+            </div>
+            <div class="result-bar-bg">
+              <div id="mp-bar-b" class="result-bar bar-b"></div>
+            </div>
+            <span id="mp-votes-b" class="result-votes">0 votes</span>
+          </div>
+
+          <p id="mp-total" class="result-total">0 total responses</p>
+        </div>
+      </div>
+
+      <div class="game-actions">
+        <button id="mp-next-btn" class="btn btn-primary" style="display:none">
+          Next Question →
+        </button>
+        <button id="mp-home-btn" class="btn btn-ghost">
+          ← Home
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /app -->
+
+  <!-- Toast notification -->
+  <div id="toast"></div>
+
+  <!-- PeerJS from CDN (WebRTC multiplayer) -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+  <!-- Questions bank (10,000 questions) -->
+  <script src="questions.js"></script>
+
+  <!-- Game logic -->
+  <script src="script.js"></script>
+</body>
+</html>
