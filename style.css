@@ -1718,6 +1718,396 @@ header {
   display: none;
 }
 
+/* ===== XP / LEVEL BAR ===== */
+.xp-bar-container {
+  width: 100%;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.xp-level-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  min-width: 48px;
+}
+
+.xp-level-num {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.xp-level-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-light);
+}
+
+.xp-bar-info {
+  flex: 1;
+}
+
+.xp-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.xp-bar-bg {
+  width: 100%;
+  height: 8px;
+  border-radius: 99px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.xp-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== SESSION PROGRESS BAR ===== */
+.session-progress-bar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0 2px;
+}
+
+.session-progress-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-light);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.session-progress-bg {
+  flex: 1;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.session-progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+  transition: width 0.4s ease;
+  width: 0%;
+}
+
+/* ===== DAILY CHALLENGE BUTTON ===== */
+.btn-daily {
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  color: #fff;
+  border-color: #f59e0b;
+  position: relative;
+}
+
+.btn-daily:hover {
+  background: linear-gradient(135deg, #d97706, #dc2626);
+  border-color: #d97706;
+}
+
+.daily-challenge-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #22c55e;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border: 2px solid var(--surface);
+}
+
+.daily-challenge-badge.done {
+  background: var(--text-light);
+}
+
+/* ===== FUN POPUP ===== */
+#fun-popup {
+  position: fixed;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--primary);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 99px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-lg);
+  pointer-events: none;
+  z-index: 8000;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#fun-popup.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ===== COMBO COUNTER ===== */
+#combo-popup {
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%) scale(0.5);
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--primary);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  pointer-events: none;
+  z-index: 8001;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  letter-spacing: -1px;
+}
+
+#combo-popup.show {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+/* ===== SPARKLE PARTICLES ===== */
+#sparkle-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 7999;
+  overflow: hidden;
+}
+
+.sparkle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: sparkleFly 0.8s ease-out forwards;
+}
+
+@keyframes sparkleFly {
+  0%   { opacity: 1; transform: scale(1) translate(0, 0); }
+  100% { opacity: 0; transform: scale(0) translate(var(--sx), var(--sy)); }
+}
+
+/* ===== SCREEN SHAKE ===== */
+@keyframes screenShake {
+  0%, 100% { transform: translateX(0); }
+  10%       { transform: translateX(-6px) rotate(-0.5deg); }
+  20%       { transform: translateX(6px) rotate(0.5deg); }
+  30%       { transform: translateX(-5px); }
+  40%       { transform: translateX(5px); }
+  50%       { transform: translateX(-3px); }
+  60%       { transform: translateX(3px); }
+  70%       { transform: translateX(-2px); }
+  80%       { transform: translateX(2px); }
+}
+
+.screen-shake {
+  animation: screenShake 0.55s ease !important;
+}
+
+/* ===== WINNING OPTION PULSE ===== */
+@keyframes winPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
+  60%  { box-shadow: 0 0 0 12px rgba(79, 70, 229, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+}
+
+.option-btn.winner-pulse {
+  animation: winPulse 0.7s ease-out;
+}
+
+.option-btn.option-a.winner-pulse {
+  animation: winPulseA 0.7s ease-out;
+}
+
+@keyframes winPulseA {
+  0%   { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.5); }
+  60%  { box-shadow: 0 0 0 14px rgba(249, 115, 22, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+}
+
+.option-btn.option-b.winner-pulse {
+  animation: winPulseB 0.7s ease-out;
+}
+
+@keyframes winPulseB {
+  0%   { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.5); }
+  60%  { box-shadow: 0 0 0 14px rgba(6, 182, 212, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+}
+
+/* ===== VOTE COUNT BOUNCE ===== */
+@keyframes countBounce {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35); }
+  70%  { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
+.result-pct.bounce {
+  animation: countBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: inline-block;
+}
+
+/* ===== GLOW EFFECT ON CHOSEN OPTION ===== */
+.option-btn.selected.option-a.glow {
+  box-shadow: 0 0 0 3px var(--option-a), 0 0 16px rgba(249, 115, 22, 0.35);
+}
+
+.option-btn.selected.option-b.glow {
+  box-shadow: 0 0 0 3px var(--option-b), 0 0 16px rgba(6, 182, 212, 0.35);
+}
+
+/* ===== LEVEL UP BANNER ===== */
+#levelup-banner {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.7);
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: #fff;
+  padding: 28px 36px;
+  border-radius: var(--radius);
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  z-index: 9000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#levelup-banner.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+#levelup-banner .levelup-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 8px;
+}
+
+#levelup-banner .levelup-title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  display: block;
+  margin-bottom: 4px;
+}
+
+#levelup-banner .levelup-subtitle {
+  font-size: 1rem;
+  font-weight: 600;
+  opacity: 0.9;
+  display: block;
+}
+
+/* ===== DAILY CHALLENGE PROGRESS ===== */
+.daily-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.daily-progress-bar-bg {
+  flex: 1;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.daily-progress-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #f59e0b, #ef4444);
+  transition: width 0.5s ease;
+}
+
+.daily-reward-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 10px;
+}
+
+/* XP bar in game header */
+.game-xp-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0 6px;
+}
+
+.game-xp-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.game-xp-bg {
+  flex: 1;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.game-xp-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+  transition: width 0.5s ease;
+  width: 0%;
+}
+
+[data-theme="dark"] .xp-bar-container {
+  background: var(--surface);
+}
+
+[data-theme="dark"] #fun-popup {
+  background: var(--primary);
+}
+
+[data-theme="dark"] #levelup-banner {
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+}
+
 /* ---- RESPONSIVE ---- */
 @media (min-width: 480px) {
   .options {
