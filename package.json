@@ -1,0 +1,10 @@
+{
+  "name": "would-you-rather-game",
+  "version": "2.0.0",
+  "description": "Would You Rather game with real vote tracking",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {}
+}
