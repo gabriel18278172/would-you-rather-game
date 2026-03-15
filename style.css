@@ -643,7 +643,7 @@ header {
   stroke: var(--success);
   stroke-width: 5;
   stroke-linecap: round;
-  stroke-dasharray: 163.36; /* 2 * PI * 26 ≈ 163.36 */
+  stroke-dasharray: 163.36; /* 2 * π * r = 2 * π * 26 ≈ 163.36 (rounded to 2dp) */
   stroke-dashoffset: 0;
   transition: stroke-dashoffset 0.9s linear, stroke 0.3s ease;
 }

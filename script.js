@@ -149,7 +149,7 @@ function recordAnswer(choice, elapsedSeconds, category) {
   stats.playTimes.push(hour);
   if (stats.playTimes.length > 500) stats.playTimes = stats.playTimes.slice(-500);
 
-  // Night owl: midnight–3am; early bird: 4am–6am (no overlap)
+  // Night owl: midnight–3:59am; early bird: 4am–6:59am (no overlap)
   if (hour >= 0 && hour < 4) stats.playedAfterMidnight = true;
   if (hour >= 4 && hour < 7) stats.playedBefore7am = true;
 
