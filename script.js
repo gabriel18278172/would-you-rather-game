@@ -31,6 +31,7 @@ function setColorTheme(name) {
   document.querySelectorAll('.swatch').forEach(s => {
     s.classList.toggle('active', s.dataset.themeName === name);
   });
+  if (appReady) playSound('theme-chime');
 }
 
 // ===== SOUND EFFECTS =====
@@ -48,50 +49,273 @@ function playSound(type) {
   if (localStorage.getItem('wyr_sounds') === 'false') return;
   try {
     const ctx = getAudioCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
+
+    // Helper to create a quick oscillator node
+    function osc(freq, waveType, startGain, endGain, startTime, duration) {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = freq;
+      o.type = waveType;
+      g.gain.setValueAtTime(startGain, startTime);
+      g.gain.exponentialRampToValueAtTime(Math.max(endGain, 0.0001), startTime + duration);
+      o.start(startTime); o.stop(startTime + duration + 0.02);
+    }
+
+    const t = ctx.currentTime;
+
     switch (type) {
+
+      // ── existing basic sounds ──────────────────────────────────────────────
       case 'click':
-        osc.frequency.value = 800;
-        osc.type = 'sine';
-        gain.gain.setValueAtTime(0.1, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.1);
+        osc(800, 'sine', 0.1, 0.001, t, 0.1);
         break;
+
       case 'ding':
-        osc.frequency.value = 1200;
-        osc.type = 'sine';
-        gain.gain.setValueAtTime(0.15, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.4);
+        osc(1200, 'sine', 0.15, 0.001, t, 0.4);
         break;
+
       case 'tick':
-        osc.frequency.value = 440;
-        osc.type = 'square';
-        gain.gain.setValueAtTime(0.05, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.05);
+        osc(440, 'square', 0.05, 0.001, t, 0.05);
         break;
+
       case 'milestone':
-        [523, 659, 784, 1047].forEach((freq, i) => {
-          const o = ctx.createOscillator();
-          const g = ctx.createGain();
-          o.connect(g);
-          g.connect(ctx.destination);
-          o.frequency.value = freq;
-          o.type = 'sine';
-          g.gain.setValueAtTime(0, ctx.currentTime + i * 0.1);
-          g.gain.linearRampToValueAtTime(0.15, ctx.currentTime + i * 0.1 + 0.05);
-          g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.1 + 0.3);
-          o.start(ctx.currentTime + i * 0.1);
-          o.stop(ctx.currentTime + i * 0.1 + 0.3);
+        [523, 659, 784, 1047].forEach((freq, i) => osc(freq, 'sine', 0.15, 0.001, t + i * 0.1, 0.3));
+        break;
+
+      // ── navigation & UI ───────────────────────────────────────────────────
+      case 'swoosh': {
+        // Screen transition swoosh — sweeping sine
+        const o2 = ctx.createOscillator();
+        const g2 = ctx.createGain();
+        o2.connect(g2); g2.connect(ctx.destination);
+        o2.type = 'sine';
+        o2.frequency.setValueAtTime(200, t);
+        o2.frequency.exponentialRampToValueAtTime(600, t + 0.18);
+        g2.gain.setValueAtTime(0.08, t);
+        g2.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+        o2.start(t); o2.stop(t + 0.27);
+        break;
+      }
+
+      case 'hover': {
+        // Subtle tick on button hover
+        osc(1000, 'sine', 0.03, 0.001, t, 0.04);
+        break;
+      }
+
+      case 'menu-open': {
+        osc(440, 'sine', 0.06, 0.001, t, 0.1);
+        osc(550, 'sine', 0.05, 0.001, t + 0.06, 0.12);
+        break;
+      }
+
+      case 'menu-close': {
+        osc(550, 'sine', 0.06, 0.001, t, 0.08);
+        osc(380, 'sine', 0.05, 0.001, t + 0.05, 0.1);
+        break;
+      }
+
+      case 'toggle': {
+        // Toggle switch click
+        osc(900, 'square', 0.04, 0.001, t, 0.04);
+        osc(700, 'square', 0.03, 0.001, t + 0.04, 0.04);
+        break;
+      }
+
+      case 'theme-chime': {
+        // Unique short melody when switching colour themes
+        const notes = [523, 659, 784, 659, 1047];
+        notes.forEach((freq, i) => osc(freq, 'sine', 0.1, 0.001, t + i * 0.08, 0.12));
+        break;
+      }
+
+      case 'error': {
+        // Gentle bonk
+        osc(220, 'sawtooth', 0.08, 0.001, t, 0.15);
+        osc(180, 'sawtooth', 0.06, 0.001, t + 0.08, 0.15);
+        break;
+      }
+
+      // ── gameplay sounds ───────────────────────────────────────────────────
+      case 'question-reveal': {
+        // Dramatic reveal — whoosh then sparkle
+        const ro = ctx.createOscillator();
+        const rg = ctx.createGain();
+        ro.connect(rg); rg.connect(ctx.destination);
+        ro.type = 'sine';
+        ro.frequency.setValueAtTime(120, t);
+        ro.frequency.exponentialRampToValueAtTime(800, t + 0.22);
+        rg.gain.setValueAtTime(0.0, t);
+        rg.gain.linearRampToValueAtTime(0.1, t + 0.05);
+        rg.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+        ro.start(t); ro.stop(t + 0.32);
+        osc(1200, 'sine', 0.08, 0.001, t + 0.22, 0.2);
+        break;
+      }
+
+      case 'hover-a': {
+        osc(330, 'sine', 0.04, 0.001, t, 0.1);
+        break;
+      }
+
+      case 'hover-b': {
+        osc(660, 'sine', 0.04, 0.001, t, 0.1);
+        break;
+      }
+
+      case 'vote-lock': {
+        // Satisfying click-lock
+        osc(300, 'square', 0.12, 0.001, t, 0.06);
+        osc(600, 'sine', 0.15, 0.001, t + 0.05, 0.12);
+        osc(900, 'sine', 0.1, 0.001, t + 0.12, 0.15);
+        break;
+      }
+
+      case 'results-reveal': {
+        // Short drum roll then ta-da
+        const rolls = 8;
+        for (let i = 0; i < rolls; i++) {
+          osc(100 + i * 10, 'sawtooth', 0.05, 0.001, t + i * 0.04, 0.05);
+        }
+        // ta-da chord
+        [523, 659, 784].forEach((f, i) => osc(f, 'sine', 0.12, 0.001, t + rolls * 0.04 + i * 0.04, 0.5));
+        break;
+      }
+
+      case 'majority': {
+        // Triumphant fanfare
+        [392, 494, 587, 784].forEach((f, i) => osc(f, 'sine', 0.13, 0.001, t + i * 0.07, 0.35));
+        break;
+      }
+
+      case 'minority': {
+        // Playful surprised tone
+        osc(523, 'sine', 0.1, 0.001, t, 0.1);
+        osc(415, 'sine', 0.1, 0.001, t + 0.1, 0.1);
+        osc(330, 'sine', 0.1, 0.001, t + 0.2, 0.2);
+        break;
+      }
+
+      case 'next-whoosh': {
+        // Transition between questions
+        const no = ctx.createOscillator();
+        const ng = ctx.createGain();
+        no.connect(ng); ng.connect(ctx.destination);
+        no.type = 'sine';
+        no.frequency.setValueAtTime(600, t);
+        no.frequency.exponentialRampToValueAtTime(200, t + 0.2);
+        ng.gain.setValueAtTime(0.08, t);
+        ng.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+        no.start(t); no.stop(t + 0.24);
+        break;
+      }
+
+      // ── timed mode sounds ─────────────────────────────────────────────────
+      case 'timer-start': {
+        osc(660, 'sine', 0.08, 0.001, t, 0.12);
+        break;
+      }
+
+      case 'halfway-warn': {
+        osc(880, 'sine', 0.07, 0.001, t, 0.08);
+        osc(880, 'sine', 0.07, 0.001, t + 0.12, 0.08);
+        break;
+      }
+
+      case 'urgent-tick': {
+        // Escalating pitch tick (call multiple times, pitch provided externally
+        // via type 'urgent-tick-N'); we just do a sharp high tick
+        osc(1200, 'square', 0.07, 0.001, t, 0.05);
+        break;
+      }
+
+      case 'heartbeat': {
+        osc(80, 'sine', 0.18, 0.001, t, 0.12);
+        osc(80, 'sine', 0.12, 0.001, t + 0.14, 0.1);
+        break;
+      }
+
+      case 'times-up': {
+        // Buzzer alarm
+        [220, 220, 220].forEach((f, i) => osc(f, 'sawtooth', 0.14, 0.001, t + i * 0.15, 0.12));
+        break;
+      }
+
+      case 'just-in-time': {
+        // Exciting close-call sound
+        [440, 554, 659, 880].forEach((f, i) => osc(f, 'sine', 0.12, 0.001, t + i * 0.06, 0.15));
+        break;
+      }
+
+      // ── achievement sounds ────────────────────────────────────────────────
+      case 'achievement': {
+        // Epic fanfare with rising chords
+        const fanfare = [392, 494, 587, 784, 987];
+        fanfare.forEach((f, i) => {
+          osc(f, 'sine', 0.13, 0.001, t + i * 0.08, 0.4);
+          osc(f * 2, 'sine', 0.05, 0.001, t + i * 0.08, 0.25);
         });
         break;
+      }
+
+      case 'toast-sparkle': {
+        // Sparkle chime for toast
+        [1200, 1400, 1600, 1400, 1200].forEach((f, i) => osc(f, 'sine', 0.07, 0.001, t + i * 0.05, 0.1));
+        break;
+      }
+
+      // ── fun / juice sounds ────────────────────────────────────────────────
+      case 'confetti-pop': {
+        // Popping sound
+        [300, 500, 700, 400, 600].forEach((f, i) => {
+          osc(f, 'square', 0.06, 0.001, t + i * 0.035, 0.05);
+        });
+        break;
+      }
+
+      case 'share': {
+        // Whoosh send
+        const so = ctx.createOscillator();
+        const sg = ctx.createGain();
+        so.connect(sg); sg.connect(ctx.destination);
+        so.type = 'sine';
+        so.frequency.setValueAtTime(300, t);
+        so.frequency.exponentialRampToValueAtTime(1000, t + 0.15);
+        sg.gain.setValueAtTime(0.08, t);
+        sg.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+        so.start(t); so.stop(t + 0.22);
+        break;
+      }
+
+      case 'copy': {
+        // Satisfying snap
+        osc(800, 'square', 0.08, 0.001, t, 0.04);
+        osc(1200, 'sine', 0.07, 0.001, t + 0.03, 0.07);
+        break;
+      }
+
+      case 'category-tick': {
+        osc(700, 'sine', 0.05, 0.001, t, 0.06);
+        break;
+      }
+
+      case 'levelup': {
+        // Level-up fanfare
+        const lvl = [262, 330, 392, 523, 659, 784, 1047];
+        lvl.forEach((f, i) => {
+          osc(f, 'sine', 0.14, 0.001, t + i * 0.07, 0.35);
+          if (i < 3) osc(f * 1.5, 'sine', 0.05, 0.001, t + i * 0.07, 0.2);
+        });
+        break;
+      }
+
+      case 'daily-complete': {
+        // Daily challenge complete
+        [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => osc(f, 'sine', 0.12, 0.001, t + i * 0.07, 0.3));
+        break;
+      }
+
     }
   } catch (e) {
     // Audio not supported
@@ -161,6 +385,82 @@ function resetStats() {
   saveStats();
 }
 
+// ===== XP / LEVEL SYSTEM =====
+
+const XP_PER_QUESTION = 10;
+const XP_PER_TIMED_BONUS = 5;
+const XP_PER_SECOND_REMAINING = 1;
+
+function xpForLevel(level) {
+  // Level N requires N * 100 XP total (0→1: 100, 1→2: 200, etc.)
+  return level * 100;
+}
+
+function loadXP() {
+  try {
+    const saved = localStorage.getItem('wyr_xp_v1');
+    if (saved) return JSON.parse(saved);
+  } catch (e) {}
+  return { xp: 0, level: 1 };
+}
+
+function saveXP() {
+  try {
+    localStorage.setItem('wyr_xp_v1', JSON.stringify(xpData));
+  } catch (e) {}
+}
+
+let xpData = loadXP();
+
+function earnXP(amount) {
+  xpData.xp += amount;
+  let leveled = false;
+  while (xpData.xp >= xpForLevel(xpData.level)) {
+    xpData.xp -= xpForLevel(xpData.level);
+    xpData.level++;
+    leveled = true;
+  }
+  saveXP();
+  renderXPBars();
+  if (leveled) {
+    triggerLevelUp(xpData.level);
+  }
+}
+
+function renderXPBars() {
+  const needed = xpForLevel(xpData.level);
+  const pct = Math.min(100, Math.round((xpData.xp / needed) * 100));
+
+  // Home screen XP bar
+  const homeNum = document.getElementById('home-level-num');
+  const homeText = document.getElementById('home-xp-text');
+  const homeNext = document.getElementById('home-xp-next');
+  const homeFill = document.getElementById('home-xp-fill');
+  if (homeNum) homeNum.textContent = xpData.level;
+  if (homeText) homeText.textContent = xpData.xp + ' XP';
+  if (homeNext) homeNext.textContent = (needed - xpData.xp) + ' XP to next';
+  if (homeFill) homeFill.style.width = pct + '%';
+
+  // In-game XP row
+  const gameLabel = document.getElementById('game-xp-label');
+  const gameFill = document.getElementById('game-xp-fill');
+  if (gameLabel) gameLabel.textContent = `Lv.${xpData.level} · ${xpData.xp} XP`;
+  if (gameFill) gameFill.style.width = pct + '%';
+}
+
+function triggerLevelUp(newLevel) {
+  playSound('levelup');
+  triggerConfetti();
+  const banner = document.getElementById('levelup-banner');
+  const title = document.getElementById('levelup-title');
+  const subtitle = document.getElementById('levelup-subtitle');
+  if (!banner) return;
+  if (title) title.textContent = '⭐ Level Up!';
+  if (subtitle) subtitle.textContent = `You reached Level ${newLevel}!`;
+  banner.classList.add('show');
+  setTimeout(() => banner.classList.remove('show'), 3200);
+}
+
 // ===== ACHIEVEMENTS =====
 
 const ACHIEVEMENTS = [
@@ -199,12 +499,14 @@ function showAchievementToast(ach) {
   el.classList.add('show');
   if (achievementToastTimer) clearTimeout(achievementToastTimer);
   achievementToastTimer = setTimeout(() => el.classList.remove('show'), 4000);
-  playSound('milestone');
+  playSound('achievement');
+  playSound('toast-sparkle');
 }
 
 // ===== CONFETTI =====
 
 function triggerConfetti() {
+  playSound('confetti-pop');
   const canvas = document.getElementById('confetti-canvas');
   if (!canvas) return;
   canvas.style.display = 'block';
@@ -251,6 +553,230 @@ function triggerConfetti() {
   animate();
 }
 
+// ===== SPARKLE PARTICLES =====
+
+function spawnSparkles(x, y) {
+  const container = document.getElementById('sparkle-container');
+  if (!container) return;
+  const colors = ['#4f46e5','#f97316','#06b6d4','#22c55e','#a855f7','#eab308','#ef4444'];
+  for (let i = 0; i < 12; i++) {
+    const el = document.createElement('div');
+    el.className = 'sparkle';
+    const size = Math.random() * 8 + 4;
+    const angle = Math.random() * Math.PI * 2;
+    const dist = Math.random() * 80 + 40;
+    el.style.cssText = `
+      left:${x}px; top:${y}px;
+      width:${size}px; height:${size}px;
+      background:${colors[Math.floor(Math.random() * colors.length)]};
+      --sx:${Math.cos(angle) * dist}px;
+      --sy:${Math.sin(angle) * dist}px;
+      animation-delay:${Math.random() * 0.15}s;
+      animation-duration:${0.5 + Math.random() * 0.4}s;
+    `;
+    container.appendChild(el);
+    setTimeout(() => el.remove(), 1000);
+  }
+}
+
+// ===== SCREEN SHAKE =====
+
+function triggerScreenShake() {
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.classList.remove('screen-shake');
+  void app.offsetWidth; // reflow
+  app.classList.add('screen-shake');
+  setTimeout(() => app.classList.remove('screen-shake'), 600);
+}
+
+// ===== FUN POPUP =====
+
+const FUN_MESSAGES_GENERAL = [
+  'Nice pick! 🎯', 'Interesting choice! 🤔', 'Bold move! 💪',
+  'Classic! 👌', 'Controversial! 🌶️', 'Solid choice! ✅', 'Intriguing… 🧐',
+  'Respect! 🫡', 'No going back now! 🚀', 'The people have spoken! 📢',
+];
+const FUN_MESSAGES_MAJORITY = [
+  'Great minds think alike! 🧠', 'Popular choice! 🏆',
+  'You\'re with the crowd! 🎉', 'You and {pct}% agree! 🤝',
+  'The majority rules! 👑',
+];
+const FUN_MESSAGES_MINORITY = [
+  'Unique thinker! 💎', 'Plot twist! 🎬', 'Standing out from the crowd! ⭐',
+  'Rare opinion! 🦄', 'Going against the grain! 🔥', 'Rebel! ✊',
+];
+
+let funPopupTimer = null;
+
+function showFunPopup(choice, pctA, pctB) {
+  const chosenPct = choice === 'A' ? pctA : pctB;
+  let msg;
+  if (chosenPct >= 55) {
+    const raw = FUN_MESSAGES_MAJORITY[Math.floor(Math.random() * FUN_MESSAGES_MAJORITY.length)];
+    msg = raw.replace('{pct}', chosenPct);
+  } else if (chosenPct <= 40) {
+    msg = FUN_MESSAGES_MINORITY[Math.floor(Math.random() * FUN_MESSAGES_MINORITY.length)];
+  } else {
+    msg = FUN_MESSAGES_GENERAL[Math.floor(Math.random() * FUN_MESSAGES_GENERAL.length)];
+  }
+  const el = document.getElementById('fun-popup');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  if (funPopupTimer) clearTimeout(funPopupTimer);
+  funPopupTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ===== COMBO COUNTER =====
+
+const COMBO_LABELS = ['', '', '', 'FAST! ⚡', 'LIGHTNING! ⚡⚡', 'INSANE! 🔥🔥🔥'];
+
+let comboCount = 0;
+let comboTimer = null;
+
+function triggerCombo(secondsRemaining, totalDuration) {
+  const ratio = secondsRemaining / totalDuration;
+  if (ratio > 0.6) comboCount++;
+  else comboCount = 0;
+
+  if (comboCount >= 3) {
+    const label = COMBO_LABELS[Math.min(comboCount, COMBO_LABELS.length - 1)];
+    showComboPopup(label);
+  }
+}
+
+function showComboPopup(text) {
+  const el = document.getElementById('combo-popup');
+  if (!el) return;
+  el.textContent = text;
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  if (comboTimer) clearTimeout(comboTimer);
+  comboTimer = setTimeout(() => el.classList.remove('show'), 1500);
+}
+
+// ===== SESSION PROGRESS BAR =====
+
+const SESSION_MILESTONE = 20; // bar fills over 20 questions
+
+function updateSessionProgressBar() {
+  const fill = document.getElementById('session-progress-fill');
+  const label = document.getElementById('session-progress-label');
+  if (fill) fill.style.width = Math.min(100, (sessionAnswered / SESSION_MILESTONE) * 100) + '%';
+  if (label) label.textContent = sessionAnswered + ' answered';
+}
+
+// ===== DAILY CHALLENGE =====
+
+const DAILY_CHALLENGES = [
+  { category: 'Food',          goal: 10, desc: 'Answer 10 Food questions today!' },
+  { category: 'Funny',         goal: 10, desc: 'Answer 10 Funny questions today!' },
+  { category: 'Superpowers',   goal: 8,  desc: 'Answer 8 Superpowers questions today!' },
+  { category: 'Animals',       goal: 10, desc: 'Answer 10 Animals questions today!' },
+  { category: 'Hypothetical',  goal: 8,  desc: 'Answer 8 Hypothetical questions today!' },
+  { category: 'Sports',        goal: 10, desc: 'Answer 10 Sports questions today!' },
+  { category: 'Travel',        goal: 8,  desc: 'Answer 8 Travel questions today!' },
+  { category: 'Technology',    goal: 10, desc: 'Answer 10 Technology questions today!' },
+  { category: 'Money',         goal: 8,  desc: 'Answer 8 Money questions today!' },
+  { category: 'Relationships', goal: 8,  desc: 'Answer 8 Relationships questions today!' },
+  { category: 'Random',        goal: 12, desc: 'Answer 12 Random questions today!' },
+  { category: 'School',        goal: 10, desc: 'Answer 10 School questions today!' },
+];
+
+function todayKey() {
+  const d = new Date();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
+function getTodayChallenge() {
+  // Use date as seed to pick a consistent challenge per day
+  const d = new Date();
+  const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  return DAILY_CHALLENGES[seed % DAILY_CHALLENGES.length];
+}
+
+function loadDailyProgress() {
+  try {
+    const saved = localStorage.getItem('wyr_daily_v1');
+    if (saved) {
+      const data = JSON.parse(saved);
+      if (data.date === todayKey()) return data;
+    }
+  } catch (e) {}
+  return { date: todayKey(), progress: 0, completed: false };
+}
+
+function saveDailyProgress(data) {
+  try {
+    localStorage.setItem('wyr_daily_v1', JSON.stringify(data));
+  } catch (e) {}
+}
+
+let dailyProgress = loadDailyProgress();
+
+function recordDailyProgress(category) {
+  const challenge = getTodayChallenge();
+  if (dailyProgress.completed) return;
+  if (category !== challenge.category) return;
+  dailyProgress.progress = (dailyProgress.progress || 0) + 1;
+  if (dailyProgress.progress >= challenge.goal) {
+    dailyProgress.completed = true;
+    saveDailyProgress(dailyProgress);
+    completeDailyChallenge();
+  } else {
+    saveDailyProgress(dailyProgress);
+  }
+  renderDailyBadge();
+}
+
+function completeDailyChallenge() {
+  playSound('daily-complete');
+  triggerConfetti();
+  earnXP(50);
+  showToast('🎯 Daily Champion! Challenge Complete! +50 XP 🏆', 4000);
+  renderDailyScreen();
+}
+
+function renderDailyBadge() {
+  const badge = document.getElementById('daily-badge');
+  if (!badge) return;
+  const challenge = getTodayChallenge();
+  const dp = loadDailyProgress();
+  if (dp.completed) {
+    badge.textContent = '✓ Done';
+    badge.classList.add('done');
+  } else if (dp.progress > 0) {
+    badge.textContent = `${dp.progress}/${challenge.goal}`;
+    badge.classList.remove('done');
+  } else {
+    badge.textContent = 'NEW';
+    badge.classList.remove('done');
+  }
+}
+
+function renderDailyScreen() {
+  const challenge = getTodayChallenge();
+  const dp = loadDailyProgress();
+  const desc = document.getElementById('daily-desc');
+  const progressText = document.getElementById('daily-progress-text');
+  const progressFill = document.getElementById('daily-progress-fill');
+  const progressPct = document.getElementById('daily-progress-pct');
+  const rewardText = document.getElementById('daily-reward-text');
+  if (desc) desc.textContent = challenge.desc;
+  const prog = dp.progress || 0;
+  const pct = Math.min(100, Math.round((prog / challenge.goal) * 100));
+  if (progressText) progressText.textContent = `${prog} / ${challenge.goal}`;
+  if (progressFill) progressFill.style.width = pct + '%';
+  if (progressPct) progressPct.textContent = pct + '%';
+  if (rewardText) {
+    rewardText.textContent = dp.completed ? '✅ Completed! +50 XP earned!' : 'Reward: +50 XP + Daily Champion toast';
+  }
+}
+
 // ===== CATEGORIES =====
 
 const ALL_CATEGORIES = ['Superpowers','Food','Animals','Gross','School','Sports','Hypothetical','Funny','Travel','Money','Technology','Relationships','Random'];
@@ -280,6 +806,7 @@ const state = {
   mode: 'solo',
   questions: [],
   currentIndex: 0,
+  currentQuestionIndex: 0, // actual index in the questions[] array (used as API key)
   voted: false,
   votesA: 0,
   votesB: 0,
@@ -333,12 +860,25 @@ function startTimer() {
   const container = document.getElementById('timer-container');
   if (container) container.style.display = 'flex';
 
+  playSound('timer-start');
+
   timerInterval = setInterval(() => {
     timerRemaining--;
     updateTimerUI();
-    if (timerRemaining <= 3 && timerRemaining > 0) {
-      playSound('tick');
+
+    const progress = timerRemaining / timerDuration;
+    if (timerRemaining === Math.floor(timerDuration / 2) && timerRemaining > 0) {
+      // Halfway warning
+      playSound('halfway-warn');
+    }
+    if (timerRemaining <= 5 && timerRemaining > 3) {
+      playSound('urgent-tick');
       document.getElementById('timer-container')?.classList.add('timer-warning');
+    }
+    if (timerRemaining <= 3 && timerRemaining > 0) {
+      playSound('heartbeat');
+      document.getElementById('timer-container')?.classList.add('timer-warning');
+      triggerScreenShake();
     }
     if (timerRemaining <= 0) {
       clearTimer();
@@ -372,6 +912,7 @@ function updateTimerUI() {
 }
 
 function timeOut() {
+  playSound('times-up');
   showToast('⏰ Time\'s up!');
   const btnA = document.getElementById('solo-opt-a');
   const btnB = document.getElementById('solo-opt-b');
@@ -415,6 +956,7 @@ function nextUnusedQuestion() {
   }
   const idx = state.questions[state.currentIndex];
   usedIndices.add(idx);
+  state.currentQuestionIndex = idx; // track actual index for API
   state.currentIndex = (state.currentIndex + 1) % state.questions.length;
   return questions[idx];
 }
@@ -427,7 +969,10 @@ function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const s = $('screen-' + name);
   if (s) s.classList.add('active');
+  if (appReady) playSound('swoosh');
 }
+
+let appReady = false;
 
 let toastTimer;
 function showToast(msg, duration = 2800) {
@@ -489,6 +1034,39 @@ function getSelectedCategories() {
   return sel;
 }
 
+// ===== VOTE API HELPERS =====
+
+const API_BASE = ''; // Empty string = same origin (works when served by server.js)
+
+async function submitVote(questionIndex, choice) {
+  try {
+    const res = await fetch(`${API_BASE}/api/vote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ questionIndex, choice })
+    });
+    if (!res.ok) throw new Error(`Vote failed with status ${res.status}`);
+    return await res.json();
+  } catch (e) {
+    console.warn('Vote API unavailable, using fallback');
+    return null;
+  }
+}
+
+async function getVotes(questionIndex) {
+  try {
+    const res = await fetch(`${API_BASE}/api/votes/${questionIndex}`);
+    if (!res.ok) throw new Error(`Fetch failed with status ${res.status}`);
+    return await res.json();
+  } catch (e) {
+    return null;
+  }
+}
+
+function formatNumber(n) {
+  return n.toLocaleString();
+}
+
 // ===== SOLO MODE =====
 
 function showCategoryPicker(mode) {
@@ -533,7 +1111,7 @@ function loadSoloQuestion() {
   ['solo-opt-a', 'solo-opt-b'].forEach(id => {
     const btn = $(id);
     btn.disabled = false;
-    btn.classList.remove('selected');
+    btn.classList.remove('selected', 'winner-pulse', 'glow');
   });
 
   $('solo-results').classList.remove('visible');
@@ -541,6 +1119,9 @@ function loadSoloQuestion() {
   $('solo-bar-b').style.width = '0%';
   $('solo-next-btn').style.display = 'none';
   $('solo-share-btn').style.display = 'none';
+
+  // Question reveal sound
+  playSound('question-reveal');
 
   if (state.mode === 'timed') {
     startTimer();
@@ -557,45 +1138,20 @@ function soloVote(choice) {
 
   const elapsed = sessionAnswerStart ? (Date.now() - sessionAnswerStart) / 1000 : null;
 
-  // Simulate crowd — majority matches player's choice
-  const majorityPct = Math.floor(Math.random() * 40) + 51;
-  const minorityPct = 100 - majorityPct;
-  if (choice === 'A') {
-    state.votesA = majorityPct;
-    state.votesB = minorityPct;
-  } else {
-    state.votesA = minorityPct;
-    state.votesB = majorityPct;
-  }
-
-  const total = state.votesA + state.votesB;
-  const pctA = Math.round((state.votesA / total) * 100);
-  const pctB = 100 - pctA;
-
-  lastAnsweredQuestion = state.currentQuestion;
-  lastChoice = choice;
-  lastPctA = pctA;
-  lastPctB = pctB;
-
   $('solo-opt-a').classList.toggle('selected', choice === 'A');
   $('solo-opt-b').classList.toggle('selected', choice === 'B');
   $('solo-opt-a').disabled = true;
   $('solo-opt-b').disabled = true;
 
-  $('solo-pct-a').textContent = pctA + '%';
-  $('solo-pct-b').textContent = pctB + '%';
-  $('solo-votes-a').textContent = `${state.votesA} vote${state.votesA !== 1 ? 's' : ''}`;
-  $('solo-votes-b').textContent = `${state.votesB} vote${state.votesB !== 1 ? 's' : ''}`;
-  $('solo-total').textContent = `${total} total responses`;
+  // Glow on chosen option
+  const chosenBtn = $(choice === 'A' ? 'solo-opt-a' : 'solo-opt-b');
+  chosenBtn.classList.add('glow');
 
-  $('solo-results').classList.add('visible');
-  setTimeout(() => {
-    $('solo-bar-a').style.width = pctA + '%';
-    $('solo-bar-b').style.width = pctB + '%';
-  }, 60);
-
-  $('solo-next-btn').style.display = '';
-  $('solo-share-btn').style.display = '';
+  // Sparkles at button position
+  if (chosenBtn) {
+    const rect = chosenBtn.getBoundingClientRect();
+    spawnSparkles(rect.left + rect.width / 2, rect.top + rect.height / 2);
+  }
 
   // Session tracking
   sessionAnswered++;
@@ -604,10 +1160,118 @@ function soloVote(choice) {
   // Persistent stats
   recordAnswer(choice, elapsed, state.currentQuestion?.category);
 
-  playSound('ding');
+  // Daily challenge tracking
+  recordDailyProgress(state.currentQuestion?.category);
 
-  // History
-  addToHistory(state.currentQuestion, choice, pctA, pctB);
+  // XP earn
+  let xpEarned = XP_PER_QUESTION;
+  if (state.mode === 'timed') {
+    xpEarned += XP_PER_TIMED_BONUS;
+    if (elapsed !== null && timerDuration > 0) {
+      const remaining = Math.max(0, timerDuration - elapsed);
+      xpEarned += Math.floor(remaining * XP_PER_SECOND_REMAINING);
+    }
+  }
+  earnXP(xpEarned);
+
+  // Combo (timed mode)
+  if (state.mode === 'timed' && elapsed !== null) {
+    triggerCombo(Math.max(0, timerDuration - elapsed), timerDuration);
+  }
+
+  // Session progress bar
+  updateSessionProgressBar();
+
+  playSound('vote-lock');
+
+  // Stats milestone sounds
+  if ([50, 100, 500, 1000].includes(stats.totalAnswered)) {
+    setTimeout(() => playSound('milestone'), 400);
+  }
+
+  // Attempt to submit the real vote to the API, fall back to simulated crowd
+  submitVote(state.currentQuestionIndex, choice).then(data => {
+    let pctA, pctB, votesA, votesB;
+
+    if (data && typeof data.a === 'number' && typeof data.b === 'number') {
+      // Real votes from server
+      const total = data.a + data.b;
+      if (total > 0) {
+        pctA = Math.round((data.a / total) * 100);
+        pctB = 100 - pctA;
+      } else {
+        pctA = choice === 'A' ? 100 : 0;
+        pctB = 100 - pctA;
+      }
+      votesA = data.a;
+      votesB = data.b;
+    } else {
+      // Fallback: simulate crowd — majority matches player's choice
+      const majorityPct = Math.floor(Math.random() * 40) + 51;
+      const minorityPct = 100 - majorityPct;
+      pctA = choice === 'A' ? majorityPct : minorityPct;
+      pctB = 100 - pctA;
+      votesA = pctA;
+      votesB = pctB;
+    }
+
+    state.votesA = votesA;
+    state.votesB = votesB;
+
+    lastAnsweredQuestion = state.currentQuestion;
+    lastChoice = choice;
+    lastPctA = pctA;
+    lastPctB = pctB;
+
+    $('solo-pct-a').textContent = pctA + '%';
+    $('solo-pct-b').textContent = pctB + '%';
+    $('solo-votes-a').textContent = `${formatNumber(votesA)} vote${votesA !== 1 ? 's' : ''}`;
+    $('solo-votes-b').textContent = `${formatNumber(votesB)} vote${votesB !== 1 ? 's' : ''}`;
+
+    const total = votesA + votesB;
+    $('solo-total').textContent = `${formatNumber(total)} total responses`;
+
+    $('solo-results').classList.add('visible');
+    setTimeout(() => {
+      $('solo-bar-a').style.width = pctA + '%';
+      $('solo-bar-b').style.width = pctB + '%';
+    }, 60);
+
+    // Winner pulse + bounce on pct numbers
+    setTimeout(() => {
+      const winnerBtn = $(pctA >= pctB ? 'solo-opt-a' : 'solo-opt-b');
+      winnerBtn.classList.add('winner-pulse');
+      setTimeout(() => winnerBtn.classList.remove('winner-pulse'), 800);
+
+      // Bounce chosen pct element
+      const chosenPctEl = $(choice === 'A' ? 'solo-pct-a' : 'solo-pct-b');
+      if (chosenPctEl) {
+        chosenPctEl.classList.add('bounce');
+        setTimeout(() => chosenPctEl.classList.remove('bounce'), 600);
+      }
+
+      // Results reveal sound
+      playSound('results-reveal');
+
+      // Fun popup
+      showFunPopup(choice, pctA, pctB);
+
+      // Majority/minority sound + screen shake for minority
+      const chosenPct = choice === 'A' ? pctA : pctB;
+      if (chosenPct >= 55) {
+        setTimeout(() => playSound('majority'), 600);
+      } else if (chosenPct <= 40) {
+        setTimeout(() => playSound('minority'), 600);
+        setTimeout(() => triggerScreenShake(), 700);
+      }
+    }, 150);
+
+    $('solo-next-btn').style.display = '';
+    $('solo-share-btn').style.display = '';
+
+    // History
+    addToHistory(state.currentQuestion, choice, pctA, pctB);
+  });
 }
 
 // ===== SESSION SUMMARY =====
@@ -668,11 +1332,13 @@ function openHistory() {
   renderHistory();
   $('history-panel').classList.add('open');
   $('history-overlay').classList.add('show');
+  playSound('menu-open');
 }
 
 function closeHistory() {
   $('history-panel').classList.remove('open');
   $('history-overlay').classList.remove('show');
+  playSound('menu-close');
 }
 
 // ===== SHARE =====
@@ -685,11 +1351,14 @@ function shareResult() {
   const text = `🤔 Would You Rather...\nA) ${q.optionA}\nB) ${q.optionB}\n\nI chose ${lastChoice}! (${chosenPct}% agree)\n\nPlay at: ${url}`;
 
   if (navigator.share) {
+    playSound('share');
     navigator.share({ title: 'Would You Rather?', text }).catch(() => {});
   } else {
     navigator.clipboard.writeText(text).then(() => {
+      playSound('copy');
       showToast('📋 Copied to clipboard!');
     }).catch(() => {
+      playSound('error');
       showToast('Could not copy to clipboard');
     });
   }
@@ -746,9 +1415,10 @@ function shareStats() {
   const pctA = Math.round((stats.choicesA / total) * 100);
   const text = `🏆 My Would You Rather stats:\n✅ ${stats.totalAnswered} questions answered\n⚡ Fastest answer: ${stats.fastestAnswer !== null ? stats.fastestAnswer.toFixed(1) + 's' : '--'}\n📊 A/B Split: ${pctA}% / ${100 - pctA}%\n\nPlay at: ${window.location.href}`;
   if (navigator.share) {
+    playSound('share');
     navigator.share({ title: 'Would You Rather Stats', text }).catch(() => {});
   } else {
-    navigator.clipboard.writeText(text).then(() => showToast('📋 Stats copied!')).catch(() => showToast('Could not copy'));
+    navigator.clipboard.writeText(text).then(() => { playSound('copy'); showToast('📋 Stats copied!'); }).catch(() => { playSound('error'); showToast('Could not copy'); });
   }
 }
 
@@ -1119,9 +1789,15 @@ document.addEventListener('DOMContentLoaded', () => {
   state.questions = getShuffledQuestions();
   showScreen('home');
 
+  // Render XP bar on load
+  renderXPBars();
+  renderDailyBadge();
+  appReady = true;
+
   // --- Header ---
   $('btn-theme-toggle').addEventListener('click', () => {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    playSound('toggle');
     setDarkMode(!isDark);
   });
 
@@ -1133,6 +1809,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Home screen ---
   $('btn-solo').addEventListener('click', () => showCategoryPicker('solo'));
   $('btn-timed').addEventListener('click', () => showScreen('timed-setup'));
+  $('btn-daily').addEventListener('click', () => {
+    renderDailyScreen();
+    showScreen('daily');
+  });
   $('btn-multiplayer').addEventListener('click', showMpSetup);
   $('btn-stats').addEventListener('click', () => {
     loadStatsScreen();
@@ -1143,17 +1823,25 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btn-category-back').addEventListener('click', () => showScreen('home'));
   $('btn-cat-all').addEventListener('click', () => {
     document.querySelectorAll('#category-checkboxes input[type=checkbox]').forEach(cb => cb.checked = true);
+    playSound('category-tick');
   });
   $('btn-cat-none').addEventListener('click', () => {
     document.querySelectorAll('#category-checkboxes input[type=checkbox]').forEach(cb => cb.checked = false);
+    playSound('category-tick');
   });
   $('btn-category-start').addEventListener('click', () => {
     selectedCategories = getSelectedCategories();
     if (selectedCategories.size === 0) {
+      playSound('error');
       showToast('⚠️ Please select at least one category!');
       return;
     }
     startSolo(pendingGameMode);
+  });
+
+  // Category checkbox tick sounds
+  document.getElementById('category-checkboxes')?.addEventListener('change', () => {
+    playSound('category-tick');
   });
 
   // --- Timed setup ---
@@ -1170,9 +1858,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Settings ---
   $('btn-settings-back').addEventListener('click', () => showScreen('home'));
-  $('setting-dark-mode').addEventListener('change', e => setDarkMode(e.target.checked));
+  $('setting-dark-mode').addEventListener('change', e => {
+    playSound('toggle');
+    setDarkMode(e.target.checked);
+  });
   $('setting-sounds').addEventListener('change', e => {
     localStorage.setItem('wyr_sounds', e.target.checked ? 'true' : 'false');
+    if (e.target.checked) playSound('toggle');
   });
   document.querySelectorAll('.swatch').forEach(s => {
     s.addEventListener('click', () => setColorTheme(s.dataset.themeName));
@@ -1186,16 +1878,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // --- Daily challenge ---
+  $('btn-daily-back').addEventListener('click', () => showScreen('home'));
+  $('btn-daily-start').addEventListener('click', () => {
+    const challenge = getTodayChallenge();
+    selectedCategories = new Set([challenge.category]);
+    startSolo('solo');
+  });
+
   // --- Solo game ---
-  $('solo-opt-a').addEventListener('click', () => { playSound('click'); soloVote('A'); });
-  $('solo-opt-b').addEventListener('click', () => { playSound('click'); soloVote('B'); });
-  $('solo-next-btn').addEventListener('click', loadSoloQuestion);
+  $('solo-opt-a').addEventListener('click', () => soloVote('A'));
+  $('solo-opt-b').addEventListener('click', () => soloVote('B'));
+  $('solo-opt-a').addEventListener('mouseenter', () => { if (!state.voted) playSound('hover-a'); });
+  $('solo-opt-b').addEventListener('mouseenter', () => { if (!state.voted) playSound('hover-b'); });
+  $('solo-next-btn').addEventListener('click', () => {
+    playSound('next-whoosh');
+    loadSoloQuestion();
+  });
   $('solo-share-btn').addEventListener('click', shareResult);
   $('solo-home-btn').addEventListener('click', () => {
     clearTimer();
     showSessionSummary();
   });
   $('btn-history').addEventListener('click', openHistory);
+
+  // Button hover sounds (general)
+  document.querySelectorAll('.btn, .icon-btn').forEach(btn => {
+    btn.addEventListener('mouseenter', () => playSound('hover'));
+  });
 
   // --- History panel ---
   $('btn-history-close').addEventListener('click', closeHistory);

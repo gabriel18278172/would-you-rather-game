@@ -28,6 +28,22 @@
 
     <!-- ===== HOME SCREEN ===== -->
     <div id="screen-home" class="screen">
+      <!-- XP / Level bar -->
+      <div class="xp-bar-container" id="home-xp-bar">
+        <div class="xp-level-badge">
+          <span class="xp-level-num" id="home-level-num">1</span>
+          <span class="xp-level-label">Level</span>
+        </div>
+        <div class="xp-bar-info">
+          <div class="xp-bar-label">
+            <span id="home-xp-text">0 XP</span>
+            <span id="home-xp-next">100 XP to next</span>
+          </div>
+          <div class="xp-bar-bg">
+            <div class="xp-bar-fill" id="home-xp-fill" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
       <div class="card">
         <div class="home-hero">
           <h1>Play <span class="highlight">Would You Rather</span> with friends!</h1>
@@ -40,6 +56,10 @@
         </button>
         <button id="btn-timed" class="btn btn-timed btn-lg">
           <span class="btn-icon">⏱️</span> Timed Mode
+        </button>
+        <button id="btn-daily" class="btn btn-daily btn-lg">
+          <span class="btn-icon">🎯</span> Daily Challenge
+          <span class="daily-challenge-badge" id="daily-badge">NEW</span>
         </button>
         <button id="btn-multiplayer" class="btn btn-secondary btn-lg">
           <span class="btn-icon">👥</span> Play with Friends
@@ -105,6 +125,20 @@
 
     <!-- ===== SOLO GAME ===== -->
     <div id="screen-solo-game" class="screen">
+      <!-- Session progress bar -->
+      <div class="session-progress-bar">
+        <span class="session-progress-label" id="session-progress-label">0 answered</span>
+        <div class="session-progress-bg">
+          <div class="session-progress-fill" id="session-progress-fill"></div>
+        </div>
+      </div>
+      <!-- In-game XP row -->
+      <div class="game-xp-row">
+        <span class="game-xp-label" id="game-xp-label">Lv.1 · 0 XP</span>
+        <div class="game-xp-bg">
+          <div class="game-xp-fill" id="game-xp-fill"></div>
+        </div>
+      </div>
       <div class="solo-game-header">
         <p id="solo-q-num" class="question-number">Question 1</p>
         <div class="solo-header-right">
@@ -465,6 +499,26 @@
 
   </div><!-- /app -->
 
+  <!-- ===== DAILY CHALLENGE SCREEN ===== -->
+  <div id="screen-daily" class="screen">
+    <button id="btn-daily-back" class="back-btn">← Back</button>
+    <div class="card">
+      <h2 class="screen-title">🎯 Daily Challenge</h2>
+      <p class="screen-subtitle" id="daily-desc">Loading today's challenge…</p>
+      <div class="daily-progress-row">
+        <span id="daily-progress-text">0 / 10</span>
+        <div class="daily-progress-bar-bg">
+          <div class="daily-progress-bar-fill" id="daily-progress-fill" style="width:0%"></div>
+        </div>
+        <span id="daily-progress-pct">0%</span>
+      </div>
+      <p class="daily-reward-text" id="daily-reward-text">Reward: +50 XP + Daily Champion badge</p>
+    </div>
+    <div class="mode-buttons" style="margin-top:0">
+      <button id="btn-daily-start" class="btn btn-daily btn-lg">🎯 Start Daily Challenge →</button>
+    </div>
+  </div>
+
   <!-- History Panel (slide-in overlay) -->
   <div id="history-panel" class="history-panel">
     <div class="history-panel-header">
@@ -479,6 +533,18 @@
   <div id="toast"></div>
   <!-- Achievement toast -->
   <div id="achievement-toast" class="achievement-toast"></div>
+  <!-- Fun vote popup -->
+  <div id="fun-popup"></div>
+  <!-- Combo counter popup -->
+  <div id="combo-popup"></div>
+  <!-- Level-up banner -->
+  <div id="levelup-banner">
+    <span class="levelup-icon">⭐</span>
+    <span class="levelup-title" id="levelup-title">Level Up!</span>
+    <span class="levelup-subtitle" id="levelup-subtitle">You reached Level 2!</span>
+  </div>
+  <!-- Sparkle particles container -->
+  <div id="sparkle-container"></div>
 
   <!-- PeerJS from CDN (WebRTC multiplayer) -->
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
