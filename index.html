@@ -497,27 +497,44 @@
       </div>
     </div>
 
-  </div><!-- /app -->
-
-  <!-- ===== DAILY CHALLENGE SCREEN ===== -->
-  <div id="screen-daily" class="screen">
-    <button id="btn-daily-back" class="back-btn">← Back</button>
-    <div class="card">
-      <h2 class="screen-title">🎯 Daily Challenge</h2>
-      <p class="screen-subtitle" id="daily-desc">Loading today's challenge…</p>
-      <div class="daily-progress-row">
-        <span id="daily-progress-text">0 / 10</span>
-        <div class="daily-progress-bar-bg">
-          <div class="daily-progress-bar-fill" id="daily-progress-fill" style="width:0%"></div>
+    <!-- ===== DAILY CHALLENGE SCREEN ===== -->
+    <div id="screen-daily" class="screen">
+      <button id="btn-daily-back" class="back-btn">← Back</button>
+      <div class="card">
+        <h2 class="screen-title">🎯 Daily Challenge</h2>
+        <p class="screen-subtitle" id="daily-desc">Loading today's challenge…</p>
+        <div class="daily-progress-row">
+          <span id="daily-progress-text">0 / 10</span>
+          <div class="daily-progress-bar-bg">
+            <div class="daily-progress-bar-fill" id="daily-progress-fill" style="width:0%"></div>
+          </div>
+          <span id="daily-progress-pct">0%</span>
         </div>
-        <span id="daily-progress-pct">0%</span>
+        <p class="daily-reward-text" id="daily-reward-text">Reward: +50 XP + Daily Champion badge</p>
       </div>
-      <p class="daily-reward-text" id="daily-reward-text">Reward: +50 XP + Daily Champion badge</p>
+      <div class="mode-buttons" style="margin-top:0">
+        <button id="btn-daily-start" class="btn btn-daily btn-lg">🎯 Start Daily Challenge →</button>
+      </div>
     </div>
-    <div class="mode-buttons" style="margin-top:0">
-      <button id="btn-daily-start" class="btn btn-daily btn-lg">🎯 Start Daily Challenge →</button>
+
+    <!-- ===== CREATE ROOM SCREEN ===== -->
+    <div id="screen-mp-create" class="screen">
+      <button id="btn-create-back" class="back-btn">← Back</button>
+      <div class="card">
+        <div class="mp-setup">
+          <h2>🏠 Create a Room</h2>
+          <p>Enter your name — friends will see it in the player list.</p>
+          <div class="input-group">
+            <label for="create-name-input">Your Name</label>
+            <input id="create-name-input" class="input-field" type="text" maxlength="20" placeholder="Enter your name" autocomplete="off" />
+          </div>
+          <div id="create-status" class="status-msg info" style="display:none"></div>
+          <button id="btn-create-submit" class="btn btn-primary btn-lg">Create Room →</button>
+        </div>
+      </div>
     </div>
-  </div>
+
+  </div><!-- /app -->
 
   <!-- History Panel (slide-in overlay) -->
   <div id="history-panel" class="history-panel">
@@ -546,8 +563,22 @@
   <!-- Sparkle particles container -->
   <div id="sparkle-container"></div>
 
-  <!-- PeerJS from CDN (WebRTC multiplayer) -->
-  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <!-- PeerJS from CDN (WebRTC multiplayer) — with fallback -->
+  <script>
+    (function() {
+      var primary = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
+      var fallback = 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js';
+      var s = document.createElement('script');
+      s.src = primary;
+      s.onerror = function() {
+        var s2 = document.createElement('script');
+        s2.src = fallback;
+        s2.onerror = function() { window._peerJSFailed = true; };
+        document.head.appendChild(s2);
+      };
+      document.head.appendChild(s);
+    })();
+  </script>
   <!-- Questions bank (10,000 questions) -->
   <script src="questions.js"></script>
   <!-- Game logic -->

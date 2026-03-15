@@ -230,6 +230,8 @@ header {
   justify-content: center;
   width: 36px;
   height: 36px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .icon-btn:hover {
@@ -333,6 +335,8 @@ header {
   white-space: nowrap;
   position: relative;
   overflow: hidden;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .btn:active {
@@ -1215,6 +1219,8 @@ header {
   border: none;
   padding: 4px 0;
   transition: color var(--transition);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .back-btn:hover {

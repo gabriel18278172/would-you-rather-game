@@ -316,6 +316,168 @@ function playSound(type) {
         break;
       }
 
+      // ── multiplayer sounds ────────────────────────────────────────────────
+      case 'mp-join': {
+        // Chime when successfully connected to a room
+        [880, 1047, 1319].forEach((f, i) => osc(f, 'sine', 0.1, 0.001, t + i * 0.08, 0.25));
+        break;
+      }
+
+      case 'mp-player-join': {
+        // Notification when another player joins the room
+        osc(660, 'sine', 0.1, 0.001, t, 0.1);
+        osc(880, 'sine', 0.12, 0.001, t + 0.1, 0.18);
+        break;
+      }
+
+      case 'mp-player-leave': {
+        // Subtle sound when a player disconnects
+        osc(440, 'sine', 0.08, 0.001, t, 0.12);
+        osc(330, 'sine', 0.06, 0.001, t + 0.1, 0.15);
+        break;
+      }
+
+      case 'mp-game-start': {
+        // Exciting fanfare when game starts
+        [392, 523, 659, 784, 1047].forEach((f, i) => {
+          osc(f, 'sine', 0.13, 0.001, t + i * 0.07, 0.4);
+          osc(f * 1.5, 'sine', 0.04, 0.001, t + i * 0.07, 0.2);
+        });
+        break;
+      }
+
+      case 'mp-all-voted': {
+        // All players have voted
+        [523, 659, 784].forEach((f, i) => osc(f, 'sine', 0.11, 0.001, t + i * 0.07, 0.28));
+        break;
+      }
+
+      case 'mp-waiting': {
+        // Subtle ambient pulse while waiting
+        osc(440, 'sine', 0.05, 0.001, t, 0.15);
+        osc(440, 'sine', 0.03, 0.001, t + 0.3, 0.15);
+        break;
+      }
+
+      // ── navigation sounds ─────────────────────────────────────────────────
+      case 'back': {
+        // Reverse swoosh for back buttons
+        const bo = ctx.createOscillator();
+        const bg = ctx.createGain();
+        bo.connect(bg); bg.connect(ctx.destination);
+        bo.type = 'sine';
+        bo.frequency.setValueAtTime(500, t);
+        bo.frequency.exponentialRampToValueAtTime(180, t + 0.18);
+        bg.gain.setValueAtTime(0.07, t);
+        bg.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+        bo.start(t); bo.stop(t + 0.24);
+        break;
+      }
+
+      case 'screen-enter': {
+        // Variation of swoosh for entering a new screen
+        const eo = ctx.createOscillator();
+        const eg = ctx.createGain();
+        eo.connect(eg); eg.connect(ctx.destination);
+        eo.type = 'sine';
+        eo.frequency.setValueAtTime(250, t);
+        eo.frequency.exponentialRampToValueAtTime(700, t + 0.2);
+        eg.gain.setValueAtTime(0.06, t);
+        eg.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+        eo.start(t); eo.stop(t + 0.3);
+        break;
+      }
+
+      // ── input sounds ──────────────────────────────────────────────────────
+      case 'type': {
+        // Very subtle key tap when typing in input fields
+        osc(900, 'square', 0.025, 0.001, t, 0.03);
+        break;
+      }
+
+      case 'input-clear': {
+        // Quick sound when an input field is cleared
+        osc(600, 'sine', 0.06, 0.001, t, 0.05);
+        osc(400, 'sine', 0.04, 0.001, t + 0.04, 0.05);
+        break;
+      }
+
+      // ── result sounds ─────────────────────────────────────────────────────
+      case 'bar-fill': {
+        // Satisfying filling-up sound
+        const fo = ctx.createOscillator();
+        const fg = ctx.createGain();
+        fo.connect(fg); fg.connect(ctx.destination);
+        fo.type = 'sine';
+        fo.frequency.setValueAtTime(300, t);
+        fo.frequency.linearRampToValueAtTime(600, t + 0.4);
+        fg.gain.setValueAtTime(0.06, t);
+        fg.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+        fo.start(t); fo.stop(t + 0.47);
+        break;
+      }
+
+      case 'number-tick': {
+        // Quick tick as vote numbers count up
+        osc(700, 'square', 0.03, 0.001, t, 0.025);
+        break;
+      }
+
+      // ── gameplay sounds ───────────────────────────────────────────────────
+      case 'timeout-warning': {
+        // More dramatic warning at 2 seconds left
+        osc(1400, 'square', 0.1, 0.001, t, 0.06);
+        osc(1400, 'square', 0.1, 0.001, t + 0.1, 0.06);
+        osc(1400, 'square', 0.12, 0.001, t + 0.2, 0.08);
+        break;
+      }
+
+      case 'streak': {
+        // Quick ascending notes for 3+ answers in a row
+        [523, 659, 784, 1047].forEach((f, i) => osc(f, 'sine', 0.12, 0.001, t + i * 0.05, 0.12));
+        break;
+      }
+
+      case 'rare-question': {
+        // Special sparkle sound for rarely-answered questions
+        [1200, 1500, 1800, 1500, 1200, 1500, 1800].forEach((f, i) =>
+          osc(f, 'sine', 0.06, 0.001, t + i * 0.04, 0.08));
+        break;
+      }
+
+      // ── celebration sounds ────────────────────────────────────────────────
+      case 'perfect-split': {
+        // Special sound for exactly 50/50 vote split
+        [523, 523, 659, 659, 784, 784].forEach((f, i) =>
+          osc(f, 'sine', 0.1, 0.001, t + i * 0.06, 0.15));
+        break;
+      }
+
+      case 'landslide': {
+        // Dramatic sound for 90%+ one-sided vote
+        const lo = ctx.createOscillator();
+        const lg = ctx.createGain();
+        lo.connect(lg); lg.connect(ctx.destination);
+        lo.type = 'sawtooth';
+        lo.frequency.setValueAtTime(200, t);
+        lo.frequency.exponentialRampToValueAtTime(600, t + 0.3);
+        lg.gain.setValueAtTime(0.0, t);
+        lg.gain.linearRampToValueAtTime(0.12, t + 0.05);
+        lg.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+        lo.start(t); lo.stop(t + 0.42);
+        [392, 784].forEach((f, i) => osc(f, 'sine', 0.1, 0.001, t + 0.3 + i * 0.08, 0.25));
+        break;
+      }
+
+      case 'personal-best': {
+        // New fastest answer time
+        [659, 784, 988, 1319].forEach((f, i) => {
+          osc(f, 'sine', 0.12, 0.001, t + i * 0.06, 0.3);
+          osc(f * 2, 'sine', 0.04, 0.001, t + i * 0.06, 0.15);
+        });
+        break;
+      }
+
     }
   } catch (e) {
     // Audio not supported
@@ -643,6 +805,7 @@ function triggerCombo(secondsRemaining, totalDuration) {
   if (comboCount >= 3) {
     const label = COMBO_LABELS[Math.min(comboCount, COMBO_LABELS.length - 1)];
     showComboPopup(label);
+    playSound('streak');
   }
 }
 
@@ -880,6 +1043,9 @@ function startTimer() {
       document.getElementById('timer-container')?.classList.add('timer-warning');
       triggerScreenShake();
     }
+    if (timerRemaining === 2) {
+      playSound('timeout-warning');
+    }
     if (timerRemaining <= 0) {
       clearTimer();
       timeOut();
@@ -984,10 +1150,14 @@ function showToast(msg, duration = 2800) {
   toastTimer = setTimeout(() => t.classList.remove('show'), duration);
 }
 
+function escapeHtml(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 function setStatus(id, msg, type = 'info') {
   const el = $(id);
   if (!el) return;
-  el.textContent = msg;
+  el.innerHTML = msg;
   el.className = `status-msg ${type}`;
   el.style.display = msg ? '' : 'none';
 }
@@ -1235,6 +1405,7 @@ function soloVote(choice) {
     setTimeout(() => {
       $('solo-bar-a').style.width = pctA + '%';
       $('solo-bar-b').style.width = pctB + '%';
+      playSound('bar-fill');
     }, 60);
 
     // Winner pulse + bounce on pct numbers
@@ -1256,13 +1427,28 @@ function soloVote(choice) {
       // Fun popup
       showFunPopup(choice, pctA, pctB);
 
-      // Majority/minority sound + screen shake for minority
-      const chosenPct = choice === 'A' ? pctA : pctB;
-      if (chosenPct >= 55) {
-        setTimeout(() => playSound('majority'), 600);
-      } else if (chosenPct <= 40) {
-        setTimeout(() => playSound('minority'), 600);
-        setTimeout(() => triggerScreenShake(), 700);
+      // Special split sounds based on percentages
+      if (pctA === 50 && pctB === 50) {
+        setTimeout(() => playSound('perfect-split'), 600);
+      } else if (pctA >= 90 || pctB >= 90) {
+        setTimeout(() => playSound('landslide'), 600);
+      } else {
+        // Majority/minority sound + screen shake for minority
+        const chosenPct = choice === 'A' ? pctA : pctB;
+        if (chosenPct >= 55) {
+          setTimeout(() => playSound('majority'), 600);
+        } else if (chosenPct <= 40) {
+          setTimeout(() => playSound('minority'), 600);
+          setTimeout(() => triggerScreenShake(), 700);
+        }
+      }
+
+      // Personal best sound (new fastest answer)
+      if (elapsed !== null && elapsed > 0) {
+        const prevBest = stats.fastestAnswer;
+        if (prevBest !== null && elapsed < prevBest) {
+          setTimeout(() => playSound('personal-best'), 800);
+        }
       }
     }, 150);
 
@@ -1450,7 +1636,8 @@ function generateRoomCode() {
   return code;
 }
 
-function initHost() {
+function initHost(retryCount) {
+  retryCount = retryCount || 0;
   state.isHost = true;
   state.mode = 'host';
   state.roomCode = generateRoomCode();
@@ -1461,13 +1648,14 @@ function initHost() {
   $('host-room-code').textContent = state.roomCode;
   $('host-room-code-copy').onclick = () => {
     navigator.clipboard.writeText(state.roomCode).then(() => showToast('Room code copied!'));
+    playSound('copy');
   };
 
   setStatus('host-status', 'Connecting to relay…', 'info');
 
   const Peer = getPeerJS();
   if (!Peer) {
-    setStatus('host-status', 'PeerJS failed to load. Check your connection.', 'error');
+    setStatus('host-status', 'Connection service failed to load. <button class="btn btn-sm btn-secondary" onclick="initHost()">Tap to retry</button>', 'error');
     return;
   }
 
@@ -1494,6 +1682,7 @@ function initHost() {
       renderPlayerList('host-player-list');
       setStatus('host-status', `${playerName} joined! ${state.players.length} player(s) in room.`, 'success');
       broadcastToClients({ type: 'players', players: state.players });
+      playSound('mp-player-join');
 
       conn.on('data', data => handleHostData(conn, data));
       conn.on('close', () => {
@@ -1502,6 +1691,7 @@ function initHost() {
         updatePlayerBadge();
         renderPlayerList('host-player-list');
         broadcastToClients({ type: 'players', players: state.players });
+        playSound('mp-player-leave');
       });
     });
     conn.on('error', err => console.warn('conn error', err));
@@ -1510,11 +1700,15 @@ function initHost() {
   state.peer.on('error', err => {
     if (err.type === 'unavailable-id') {
       state.peer.destroy();
-      state.roomCode = generateRoomCode();
-      $('host-room-code').textContent = state.roomCode;
-      initHost();
+      if (retryCount < 3) {
+        state.roomCode = generateRoomCode();
+        $('host-room-code').textContent = state.roomCode;
+        initHost(retryCount + 1);
+      } else {
+        setStatus('host-status', 'Could not create room after multiple attempts. <button class="btn btn-sm btn-secondary" onclick="initHost(0)">Try Again</button>', 'error');
+      }
     } else {
-      setStatus('host-status', 'Connection error: ' + err.message, 'error');
+      setStatus('host-status', 'Connection error: ' + escapeHtml(err.message) + ' <button class="btn btn-sm btn-secondary" onclick="initHost(0)">Try Again</button>', 'error');
     }
   });
 
@@ -1531,7 +1725,7 @@ function initClient(code, name) {
 
   const Peer = getPeerJS();
   if (!Peer) {
-    setStatus('join-status', 'PeerJS failed to load. Check your connection.', 'error');
+    setStatus('join-status', 'Connection service failed to load. <button class="btn btn-sm btn-secondary" onclick="submitJoin()">Tap to retry</button>', 'error');
     return;
   }
 
@@ -1543,6 +1737,13 @@ function initClient(code, name) {
     debug: 0,
   });
 
+  const connectTimeout = setTimeout(() => {
+    if (!state.hostConn || !state.hostConn.open) {
+      setStatus('join-status', 'Connection timed out. Check the code and try again. <button class="btn btn-sm btn-secondary" onclick="submitJoin()">Retry</button>', 'error');
+      if (state.peer) { state.peer.destroy(); state.peer = null; }
+    }
+  }, 15000);
+
   state.peer.on('open', () => {
     const hostPeerId = 'wyr-' + state.roomCode;
     state.hostConn = state.peer.connect(hostPeerId, {
@@ -1551,7 +1752,9 @@ function initClient(code, name) {
     });
 
     state.hostConn.on('open', () => {
+      clearTimeout(connectTimeout);
       setStatus('join-status', 'Connected! Waiting for host to start the game…', 'success');
+      playSound('mp-join');
       showScreen('mp-client-lobby');
     });
 
@@ -1563,15 +1766,17 @@ function initClient(code, name) {
     });
 
     state.hostConn.on('error', () => {
-      setStatus('join-status', 'Could not connect. Check the code and try again.', 'error');
+      clearTimeout(connectTimeout);
+      setStatus('join-status', 'Could not connect. Check the code and try again. <button class="btn btn-sm btn-secondary" onclick="submitJoin()">Retry</button>', 'error');
     });
   });
 
   state.peer.on('error', err => {
+    clearTimeout(connectTimeout);
     if (err.type === 'peer-unavailable') {
-      setStatus('join-status', 'Room not found. Double-check the code.', 'error');
+      setStatus('join-status', 'Room not found. Double-check the code. <button class="btn btn-sm btn-secondary" onclick="submitJoin()">Retry</button>', 'error');
     } else {
-      setStatus('join-status', 'Error: ' + err.message, 'error');
+      setStatus('join-status', 'Error: ' + escapeHtml(err.message) + ' <button class="btn btn-sm btn-secondary" onclick="submitJoin()">Retry</button>', 'error');
     }
   });
 }
@@ -1586,6 +1791,7 @@ function handleHostData(conn, data) {
     broadcastToClients({ type: 'vote_update', votes: state.pendingVotes });
     updateMpVoteStatus();
     if (Object.keys(state.pendingVotes).length >= state.connections.length + 1) {
+      playSound('mp-all-voted');
       revealMpResults();
     }
   }
@@ -1635,6 +1841,7 @@ function hostStartGame() {
   state.voted = false;
   state.pendingVotes = {};
 
+  playSound('mp-game-start');
   broadcastToClients({ type: 'start_game', question: q });
   loadMpQuestion(q, true);
   showScreen('mp-game');
@@ -1724,10 +1931,19 @@ function revealMpResults(extVotesA, extVotesB) {
   setTimeout(() => {
     $('mp-bar-a').style.width = pctA + '%';
     $('mp-bar-b').style.width = pctB + '%';
+    playSound('bar-fill');
   }, 60);
 
   if (state.isHost) $('mp-next-btn').style.display = '';
-  playSound('ding');
+
+  // Special celebration sounds based on vote split
+  if (pctA === 50 && pctB === 50) {
+    playSound('perfect-split');
+  } else if (pctA >= 90 || pctB >= 90) {
+    playSound('landslide');
+  } else {
+    playSound('ding');
+  }
 }
 
 function mpNextQuestion() {
@@ -1758,10 +1974,10 @@ function showMpSetup() {
 }
 
 function showMpCreate() {
-  const name = prompt('Enter your name (shown to others):', 'Player');
-  if (!name || !name.trim()) return;
-  state.myName = name.trim().slice(0, 20);
-  initHost();
+  showScreen('mp-create');
+  $('create-name-input').value = '';
+  setStatus('create-status', '', 'info');
+  setTimeout(() => $('create-name-input').focus(), 100);
 }
 
 function showMpJoin() {
@@ -1820,7 +2036,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --- Category picker ---
-  $('btn-category-back').addEventListener('click', () => showScreen('home'));
+  $('btn-category-back').addEventListener('click', () => { playSound('back'); showScreen('home'); });
   $('btn-cat-all').addEventListener('click', () => {
     document.querySelectorAll('#category-checkboxes input[type=checkbox]').forEach(cb => cb.checked = true);
     playSound('category-tick');
@@ -1845,7 +2061,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --- Timed setup ---
-  $('btn-timed-back').addEventListener('click', () => showScreen('home'));
+  $('btn-timed-back').addEventListener('click', () => { playSound('back'); showScreen('home'); });
   $('btn-timed-start').addEventListener('click', () => {
     const checked = document.querySelector('input[name="timer-duration"]:checked');
     timerDuration = checked ? parseInt(checked.value) : 10;
@@ -1853,11 +2069,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --- Stats ---
-  $('btn-stats-back').addEventListener('click', () => showScreen('home'));
+  $('btn-stats-back').addEventListener('click', () => { playSound('back'); showScreen('home'); });
   $('btn-share-stats').addEventListener('click', shareStats);
 
   // --- Settings ---
-  $('btn-settings-back').addEventListener('click', () => showScreen('home'));
+  $('btn-settings-back').addEventListener('click', () => { playSound('back'); showScreen('home'); });
   $('setting-dark-mode').addEventListener('change', e => {
     playSound('toggle');
     setDarkMode(e.target.checked);
@@ -1879,7 +2095,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --- Daily challenge ---
-  $('btn-daily-back').addEventListener('click', () => showScreen('home'));
+  $('btn-daily-back').addEventListener('click', () => { playSound('back'); showScreen('home'); });
   $('btn-daily-start').addEventListener('click', () => {
     const challenge = getTodayChallenge();
     selectedCategories = new Set([challenge.category]);
@@ -1916,28 +2132,47 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btn-summary-home').addEventListener('click', goHome);
 
   // --- Multiplayer setup ---
-  $('btn-mp-back').addEventListener('click', goHome);
+  $('btn-mp-back').addEventListener('click', () => { playSound('back'); goHome(); });
   $('btn-mp-create').addEventListener('click', showMpCreate);
   $('btn-mp-join').addEventListener('click', showMpJoin);
 
+  // --- Create room screen ---
+  $('btn-create-back').addEventListener('click', () => { playSound('back'); showScreen('mp-setup'); });
+  $('create-name-input').addEventListener('input', () => playSound('type'));
+  $('btn-create-submit').addEventListener('click', () => {
+    const name = $('create-name-input').value.trim().slice(0, 20);
+    if (!name) {
+      setStatus('create-status', 'Please enter your name.', 'error');
+      playSound('error');
+      return;
+    }
+    state.myName = name;
+    initHost();
+  });
+  $('create-name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') $('btn-create-submit').click();
+  });
+
   // --- Join screen ---
-  $('btn-join-back').addEventListener('click', () => showScreen('mp-setup'));
+  $('btn-join-back').addEventListener('click', () => { playSound('back'); showScreen('mp-setup'); });
   $('btn-join-submit').addEventListener('click', submitJoin);
   $('join-code-input').addEventListener('keydown', e => { if (e.key === 'Enter') submitJoin(); });
   $('join-code-input').addEventListener('input', e => {
     e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    playSound('type');
   });
+  $('join-name-input').addEventListener('input', () => playSound('type'));
 
   // --- Host lobby ---
-  $('btn-host-back').addEventListener('click', () => { goHome(); showScreen('mp-setup'); });
+  $('btn-host-back').addEventListener('click', () => { playSound('back'); goHome(); showScreen('mp-setup'); });
   $('btn-host-start').addEventListener('click', hostStartGame);
 
   // --- Client lobby ---
-  $('btn-client-back').addEventListener('click', () => { goHome(); showScreen('home'); });
+  $('btn-client-back').addEventListener('click', () => { playSound('back'); goHome(); showScreen('home'); });
 
   // --- Multiplayer game ---
   $('mp-opt-a').addEventListener('click', () => mpVote('A'));
   $('mp-opt-b').addEventListener('click', () => mpVote('B'));
   $('mp-next-btn').addEventListener('click', mpNextQuestion);
-  $('mp-home-btn').addEventListener('click', () => { goHome(); showScreen('home'); });
+  $('mp-home-btn').addEventListener('click', () => { playSound('back'); goHome(); showScreen('home'); });
 });
