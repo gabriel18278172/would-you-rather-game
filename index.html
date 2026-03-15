@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Would You Rather v2 — 10,000 questions, solo, timed, multiplayer, streaks, achievements!" />
+  <meta name="description" content="Would You Rather v2 — 10,000 questions, solo, timed, multiplayer, achievements!" />
   <title>Would You Rather? v2</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -108,10 +108,6 @@
       <div class="solo-game-header">
         <p id="solo-q-num" class="question-number">Question 1</p>
         <div class="solo-header-right">
-          <div id="streak-display" class="streak-display">
-            <span class="streak-fire">🔥</span>
-            <span id="streak-count" class="streak-count">0</span>
-          </div>
           <button id="btn-history" class="icon-btn" title="View history">📜</button>
         </div>
       </div>
@@ -352,14 +348,6 @@
             <div class="stat-label">Questions Answered</div>
           </div>
           <div class="stat-card">
-            <div class="stat-value" id="stat-streak">0</div>
-            <div class="stat-label">Current Streak</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value" id="stat-longest">0</div>
-            <div class="stat-label">Longest Streak</div>
-          </div>
-          <div class="stat-card">
             <div class="stat-value" id="stat-fastest">--</div>
             <div class="stat-label">Fastest Answer</div>
           </div>
@@ -458,10 +446,6 @@
           <div class="stat-card">
             <div class="stat-value" id="summary-answered">0</div>
             <div class="stat-label">Questions Answered</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value" id="summary-streak">0</div>
-            <div class="stat-label">Best Streak</div>
           </div>
           <div class="stat-card">
             <div class="stat-value" id="summary-time">0s</div>

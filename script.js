@@ -102,8 +102,6 @@ function playSound(type) {
 
 const DEFAULT_STATS = {
   totalAnswered: 0,
-  longestStreak: 0,
-  currentStreak: 0,
   choicesA: 0,
   choicesB: 0,
   playTimes: [],
@@ -133,10 +131,6 @@ let stats = loadStats();
 
 function recordAnswer(choice, elapsedSeconds, category) {
   stats.totalAnswered++;
-  stats.currentStreak++;
-  if (stats.currentStreak > stats.longestStreak) {
-    stats.longestStreak = stats.currentStreak;
-  }
   if (choice === 'A') stats.choicesA++;
   else stats.choicesB++;
 
@@ -162,11 +156,6 @@ function recordAnswer(choice, elapsedSeconds, category) {
   checkAchievements();
 }
 
-function breakStreak() {
-  stats.currentStreak = 0;
-  saveStats();
-}
-
 function resetStats() {
   stats = Object.assign({}, DEFAULT_STATS, { achievements: [] });
   saveStats();
@@ -176,9 +165,6 @@ function resetStats() {
 
 const ACHIEVEMENTS = [
   { id: 'first_question', name: 'First Question', desc: 'Answer your first question', icon: '🎯', check: s => s.totalAnswered >= 1 },
-  { id: 'on_fire',        name: 'On Fire',         desc: '10 question streak',          icon: '🔥', check: s => s.longestStreak >= 10 },
-  { id: 'unstoppable',    name: 'Unstoppable',     desc: '25 question streak',          icon: '💪', check: s => s.longestStreak >= 25 },
-  { id: 'legend',         name: 'Legend',          desc: '50 question streak',          icon: '👑', check: s => s.longestStreak >= 50 },
   { id: 'century',        name: 'Century',         desc: 'Answer 100 questions',        icon: '💯', check: s => s.totalAnswered >= 100 },
   { id: 'thousand_club',  name: 'Thousand Club',   desc: 'Answer 1,000 questions',      icon: '🌟', check: s => s.totalAnswered >= 1000 },
   { id: 'speed_demon',    name: 'Speed Demon',     desc: 'Answer in under 2 seconds',   icon: '⚡', check: s => s.fastestAnswer !== null && s.fastestAnswer < 2 },
@@ -312,8 +298,6 @@ const state = {
 
 // ===== SESSION STATE =====
 
-let sessionStreak = 0;
-let sessionBestStreak = 0;
 let sessionAnswered = 0;
 let sessionChoicesA = 0;
 let sessionChoicesB = 0;
@@ -325,8 +309,6 @@ let lastPctA = 0;
 let lastPctB = 0;
 
 function resetSession() {
-  sessionStreak = 0;
-  sessionBestStreak = 0;
   sessionAnswered = 0;
   sessionChoicesA = 0;
   sessionChoicesB = 0;
@@ -334,15 +316,6 @@ function resetSession() {
   sessionAnswerStart = null;
   lastAnsweredQuestion = null;
   lastChoice = null;
-}
-
-function updateStreakDisplay() {
-  const el = document.getElementById('streak-count');
-  if (!el) return;
-  el.textContent = sessionStreak;
-  el.classList.remove('bounce');
-  void el.offsetWidth; // reflow
-  el.classList.add('bounce');
 }
 
 // ===== TIMER =====
@@ -399,10 +372,7 @@ function updateTimerUI() {
 }
 
 function timeOut() {
-  sessionStreak = 0;
-  updateStreakDisplay();
-  breakStreak();
-  showToast('⏰ Time\'s up! Streak broken.');
+  showToast('⏰ Time\'s up!');
   const btnA = document.getElementById('solo-opt-a');
   const btnB = document.getElementById('solo-opt-b');
   if (btnA) btnA.disabled = true;
@@ -630,21 +600,11 @@ function soloVote(choice) {
   // Session tracking
   sessionAnswered++;
   if (choice === 'A') sessionChoicesA++; else sessionChoicesB++;
-  sessionStreak++;
-  if (sessionStreak > sessionBestStreak) sessionBestStreak = sessionStreak;
-  updateStreakDisplay();
 
   // Persistent stats
   recordAnswer(choice, elapsed, state.currentQuestion?.category);
 
-  // Confetti at milestones
-  if (sessionStreak === 5 || sessionStreak === 10 || sessionStreak % 25 === 0) {
-    triggerConfetti();
-    playSound('milestone');
-    showToast(`🔥 ${sessionStreak} streak! Keep going!`);
-  } else {
-    playSound('ding');
-  }
+  playSound('ding');
 
   // History
   addToHistory(state.currentQuestion, choice, pctA, pctB);
@@ -667,7 +627,6 @@ function showSessionSummary() {
   const splitB = 100 - splitA;
 
   $('summary-answered').textContent = sessionAnswered;
-  $('summary-streak').textContent = sessionBestStreak;
   $('summary-time').textContent = timeStr;
   $('summary-split').textContent = `${splitA}/${splitB}`;
 
@@ -723,7 +682,7 @@ function shareResult() {
   if (!q) return;
   const chosenPct = lastChoice === 'A' ? lastPctA : lastPctB;
   const url = window.location.href;
-  const text = `🤔 Would You Rather...\nA) ${q.optionA}\nB) ${q.optionB}\n\nI chose ${lastChoice}! (${chosenPct}% agree) 🔥 Streak: ${sessionStreak}\n\nPlay at: ${url}`;
+  const text = `🤔 Would You Rather...\nA) ${q.optionA}\nB) ${q.optionB}\n\nI chose ${lastChoice}! (${chosenPct}% agree)\n\nPlay at: ${url}`;
 
   if (navigator.share) {
     navigator.share({ title: 'Would You Rather?', text }).catch(() => {});
@@ -740,8 +699,6 @@ function shareResult() {
 
 function loadStatsScreen() {
   $('stat-total').textContent = stats.totalAnswered;
-  $('stat-streak').textContent = stats.currentStreak;
-  $('stat-longest').textContent = stats.longestStreak;
   $('stat-fastest').textContent = stats.fastestAnswer !== null ? stats.fastestAnswer.toFixed(1) + 's' : '--';
 
   const total = stats.choicesA + stats.choicesB || 1;
@@ -787,7 +744,7 @@ function renderAchievements() {
 function shareStats() {
   const total = stats.choicesA + stats.choicesB || 1;
   const pctA = Math.round((stats.choicesA / total) * 100);
-  const text = `🏆 My Would You Rather stats:\n✅ ${stats.totalAnswered} questions answered\n🔥 Longest streak: ${stats.longestStreak}\n⚡ Fastest answer: ${stats.fastestAnswer !== null ? stats.fastestAnswer.toFixed(1) + 's' : '--'}\n📊 A/B Split: ${pctA}% / ${100 - pctA}%\n\nPlay at: ${window.location.href}`;
+  const text = `🏆 My Would You Rather stats:\n✅ ${stats.totalAnswered} questions answered\n⚡ Fastest answer: ${stats.fastestAnswer !== null ? stats.fastestAnswer.toFixed(1) + 's' : '--'}\n📊 A/B Split: ${pctA}% / ${100 - pctA}%\n\nPlay at: ${window.location.href}`;
   if (navigator.share) {
     navigator.share({ title: 'Would You Rather Stats', text }).catch(() => {});
   } else {
