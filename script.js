@@ -1941,3 +1941,15 @@ document.addEventListener('DOMContentLoaded', () => {
   $('mp-next-btn').addEventListener('click', mpNextQuestion);
   $('mp-home-btn').addEventListener('click', () => { goHome(); showScreen('home'); });
 });
+function showSimpleResult(option) {
+  let percent = Math.floor(Math.random() * 40) + 30;
+
+  let resultText = option === 1
+    ? percent + "% chose this"
+    : (100 - percent) + "% chose this";
+
+  const resultEl = document.getElementById("result");
+  if (resultEl) {
+    resultEl.innerText = resultText;
+  }
+}
