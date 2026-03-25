@@ -1221,15 +1221,13 @@ function soloVote(choice) {
       }
       votesA = data.a;
       votesB = data.b;
-    } else {
-      // Fallback: simulate crowd — majority matches player's choice
-      const majorityPct = Math.floor(Math.random() * 40) + 51;
-      const minorityPct = 100 - majorityPct;
-      pctA = choice === 'A' ? majorityPct : minorityPct;
-      pctB = 100 - pctA;
-      votesA = pctA;
-      votesB = pctB;
-    }
+    
+      } else {
+  votesA = 1;
+  votesB = 0;
+  pctA = 100;
+  pctB = 0;
+}
 
     state.votesA = votesA;
     state.votesB = votesB;
