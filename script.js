@@ -1953,3 +1953,50 @@ function showSimpleResult(option) {
     resultEl.innerText = resultText;
   }
 }
+const BIN_ID = "69c436e5aa77b81da91c2921";
+const API_KEY = "$2a$10$ksSuNDRAraO624/tXv34M.G4zN8ff.b2r1DGfsWEPDFgtm4GcdHMW";
+
+async function saveVote(questionId, option) {
+  const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+    headers: { "X-Master-Key": API_KEY }
+  });
+
+  const data = await res.json();
+  const votes = data.record.votes || {};
+
+  if (!votes[questionId]) {
+    votes[questionId] = { A: 0, B: 0 };
+  }
+
+  votes[questionId][option]++;
+
+  await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Master-Key": API_KEY
+    },
+    body: JSON.stringify({ votes })
+  });
+
+  return votes[questionId];
+}
+
+async function handleVote(option) {
+  const questionId =
+    document.getElementById("solo-opt-a-text").innerText +
+    document.getElementById("solo-opt-b-text").innerText;
+
+  const result = await saveVote(questionId, option);
+
+  const total = result.A + result.B;
+
+  const pctA = Math.round((result.A / total) * 100);
+  const pctB = 100 - pctA;
+
+  document.getElementById("solo-pct-a").innerText = pctA + "%";
+  document.getElementById("solo-pct-b").innerText = pctB + "%";
+
+  document.getElementById("solo-votes-a").innerText = result.A + " votes";
+  document.getElementById("solo-votes-b").innerText = result.B + " votes";
+}
