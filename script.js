@@ -1038,21 +1038,37 @@ function getSelectedCategories() {
 
 const API_BASE = ''; // Empty string = same origin (works when served by server.js)
 
-async function submitVote(questionIndex, choice) {
-  try {
-    const res = await fetch(`${API_BASE}/api/vote`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ questionIndex, choice })
-    });
-    if (!res.ok) throw new Error(`Vote failed with status ${res.status}`);
-    return await res.json();
-  } catch (e) {
-    console.warn('Vote API unavailable, using fallback');
-    return null;
-  }
-}
+const BIN_ID = "69c436e5aa77b81da91c2921";
+const API_KEY = "$2a$10$ksSuNDRAraO624/tXv34M.G4zN8ff.b2r1DGfsWEPDFgtm4GcdHMW";
 
+async function submitVote(questionIndex, choice) {
+  const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+    headers: { "X-Master-Key": API_KEY }
+  });
+
+  const data = await res.json();
+  const votes = data.record.votes || {};
+
+  if (!votes[questionIndex]) {
+    votes[questionIndex] = { A: 0, B: 0 };
+  }
+
+  votes[questionIndex][choice]++;
+
+  await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Master-Key": API_KEY
+    },
+    body: JSON.stringify({ votes })
+  });
+
+  return {
+    a: votes[questionIndex].A,
+    b: votes[questionIndex].B
+  };
+}
 async function getVotes(questionIndex) {
   try {
     const res = await fetch(`${API_BASE}/api/votes/${questionIndex}`);
