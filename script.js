@@ -1209,7 +1209,7 @@ function soloVote(choice) {
   submitVote(state.currentQuestionIndex, choice).then(data => {
     let pctA, pctB, votesA, votesB;
 
-    if (data && typeof data.a === 'number' && typeof data.b === 'number') {
+    if (true) {
       // Real votes from server
       const total = data.a + data.b;
       if (total > 0) {
